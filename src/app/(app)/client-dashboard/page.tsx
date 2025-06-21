@@ -1,12 +1,15 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PostTaskDialog } from "@/components/pages/PostTaskDialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Briefcase, Users, Star, MessageSquare } from "lucide-react";
-import Image from "next/image";
 
 export default function ClientDashboardPage() {
   const stats = [
     {
       title: "Posted Tasks",
-      value: "4",
+      value: "3",
       icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
     },
     {
@@ -16,7 +19,7 @@ export default function ClientDashboardPage() {
     },
     {
       title: "Proposals Received",
-      value: "12",
+      value: "15",
       icon: <Star className="h-6 w-6 text-muted-foreground" />,
     },
      {
@@ -26,11 +29,20 @@ export default function ClientDashboardPage() {
     },
   ];
 
+  const postedTasks = [
+    { id: 1, title: 'Design a new logo for my coffee shop', category: 'Design', budget: 300, proposals: 5 },
+    { id: 2, title: 'Build a simple landing page with React', category: 'Web Development', budget: 800, proposals: 2 },
+    { id: 4, title: 'Photoshoot for a new clothing line', category: 'Photography', budget: 500, proposals: 8 },
+  ];
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-headline font-bold">Client Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, here's an overview of your projects.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-headline font-bold">Client Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back, here's an overview of your projects.</p>
+        </div>
+        <PostTaskDialog />
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -49,22 +61,38 @@ export default function ClientDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Find Freelancers on the Map</CardTitle>
+          <CardTitle className="font-headline">Your Posted Tasks</CardTitle>
           <CardDescription>
-            See top-rated local freelancers available in your vicinity.
+            Manage your active tasks and review proposals.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-           <div className="aspect-video w-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-             <Image 
-                src="https://placehold.co/1200x600.png"
-                alt="Local Area Map"
-                width={1200}
-                height={600}
-                className="w-full h-full object-cover"
-                data-ai-hint="world map"
-             />
-           </div>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Task</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Budget ($)</TableHead>
+                <TableHead className="text-center">Proposals</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {postedTasks.map((task) => (
+                <TableRow key={task.id}>
+                  <TableCell className="font-medium">{task.title}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{task.category}</Badge>
+                  </TableCell>
+                  <TableCell>{task.budget.toFixed(2)}</TableCell>
+                  <TableCell className="text-center">{task.proposals}</TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">Manage Task</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

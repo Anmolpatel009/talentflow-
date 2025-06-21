@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PostTaskDialog } from "@/components/pages/PostTaskDialog";
 
 const tasks = [
   { id: 1, title: 'Design a new logo for my coffee shop', category: 'Design', budget: 300, distance: '1.2 km', postedBy: 'Cafe Aroma' },
@@ -20,7 +19,6 @@ export default function TasksPage() {
           <h1 className="text-3xl font-headline font-bold">Local Tasks</h1>
           <p className="text-muted-foreground">Browse and apply for tasks available near you.</p>
         </div>
-        <PostTaskDialog />
       </div>
 
       <Card>
