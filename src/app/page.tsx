@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase, MapPin, Sparkles, Users, Award } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import Image from "next/image";
 
 export default function Home() {
   const features = [
@@ -45,8 +46,19 @@ export default function Home() {
       </header>
 
       <main className="flex-grow">
-        <section className="text-center py-20 lg:py-32">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative text-center py-20 lg:py-32 overflow-hidden">
+          <div className="absolute inset-0">
+            <Image
+              src="https://placehold.co/1920x1080.png"
+              alt="A vibrant and collaborative workspace"
+              fill
+              className="object-cover"
+              data-ai-hint="collaboration business"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+          </div>
+          <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
             <Sparkles className="mx-auto h-12 w-12 text-accent" />
             <h1 className="font-headline text-4xl md:text-6xl font-bold mt-4">
               Your Local Freelance Marketplace
@@ -56,10 +68,10 @@ export default function Home() {
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button size="lg" asChild>
-                <Link href="/dashboard">Find Talent</Link>
+                <Link href="/client-dashboard">Find Talent</Link>
               </Button>
               <Button size="lg" variant="secondary" asChild>
-                <Link href="/dashboard">Find Work</Link>
+                <Link href="/freelancer-dashboard">Find Work</Link>
               </Button>
             </div>
           </div>

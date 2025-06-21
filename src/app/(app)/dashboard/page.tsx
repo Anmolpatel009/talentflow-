@@ -1,72 +1,55 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Briefcase, Users, Star } from "lucide-react";
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, UserCheck, Search } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
-  const stats = [
-    {
-      title: "Nearby Tasks",
-      value: "12",
-      icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
-    },
-    {
-      title: "Available Freelancers",
-      value: "87",
-      icon: <Users className="h-6 w-6 text-muted-foreground" />,
-    },
-    {
-      title: "Active Bids",
-      value: "4",
-      icon: <Star className="h-6 w-6 text-muted-foreground" />,
-    },
-     {
-      title: "New Messages",
-      value: "3",
-      icon: <MapPin className="h-6 w-6 text-muted-foreground" />,
-    },
-  ];
-
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-headline font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, here's your local activity overview.</p>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-headline font-bold">Welcome to Localance</h1>
+        <p className="text-muted-foreground mt-2 text-lg">
+          Please choose your path to get started.
+        </p>
       </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              {stat.icon}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <Card className="transform hover:scale-105 transition-transform duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 font-headline text-2xl">
+              <Search className="w-8 h-8 text-primary" />
+              I'm looking for talent
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col">
+            <p className="text-muted-foreground mb-6 flex-grow">
+              Post projects, browse portfolios, and hire the best local freelancers for your needs.
+            </p>
+            <Button asChild className="w-full">
+              <Link href="/client-dashboard">
+                Go to Client Dashboard <ArrowRight className="ml-2" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="transform hover:scale-105 transition-transform duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 font-headline text-2xl">
+              <UserCheck className="w-8 h-8 text-primary" />
+              I'm looking for work
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col">
+            <p className="text-muted-foreground mb-6 flex-grow">
+              Find local jobs, showcase your skills, and connect with clients in your community.
+            </p>
+            <Button asChild className="w-full">
+              <Link href="/freelancer-dashboard">
+                Go to Freelancer Dashboard <ArrowRight className="ml-2" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Local Area Map</CardTitle>
-          <CardDescription>
-            See tasks and freelancers available in your vicinity.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-           <div className="aspect-video w-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-             <Image 
-                src="https://placehold.co/1200x600.png"
-                alt="Local Area Map"
-                width={1200}
-                height={600}
-                className="w-full h-full object-cover"
-                data-ai-hint="world map"
-             />
-           </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
