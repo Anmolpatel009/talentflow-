@@ -2,7 +2,6 @@ import { OnePercentClubClient } from "@/components/pages/OnePercentClubClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award } from "lucide-react";
-import Image from "next/image";
 
 const topFreelancers = [
   { name: 'Aria Montgomery', skill: 'Lead UI/UX Designer', avatar: 'https://placehold.co/100x100.png', hint: 'woman portrait' },

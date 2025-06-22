@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, MapPin, Sparkles, Users, Award } from "lucide-react";
+import { Briefcase, MapPin, Sparkles, Users, Award, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
@@ -10,22 +10,22 @@ export default function Home() {
     {
       icon: <MapPin className="w-8 h-8 text-primary" />,
       title: "Location-Based Matching",
-      description: "Find tasks and freelancers right in your neighborhood. Get work done faster with local professionals.",
+      description: "Find tasks and freelancers right in your neighborhood. Get real-time alerts for jobs posted nearby.",
     },
     {
-      icon: <Briefcase className="w-8 h-8 text-primary" />,
-      title: "Instant Notifications",
-      description: "Get real-time alerts for new jobs posted nearby. Be the first to accept and start working.",
+      icon: <BrainCircuit className="w-8 h-8 text-primary" />,
+      title: "AI-Powered Verification",
+      description: "Our 1% Club uses AI-generated skill tests to verify freelancers, ensuring you hire only top-tier, proven talent.",
     },
     {
       icon: <Award className="w-8 h-8 text-primary" />,
       title: "The 1% Club",
-      description: "An exclusive circle of top-tier freelancers, vetted for their exceptional skills and reliability.",
+      description: "Join an exclusive circle of elite freelancers to unlock premium projects, higher rates, and a badge of honor.",
     },
     {
       icon: <Users className="w-8 h-8 text-primary" />,
       title: "Build Together",
-      description: "Collaborate on exciting startup ideas with other talented freelancers on the platform.",
+      description: "Have a great idea but need a team? Post it on our collaboration board and find co-founders to build the future.",
     },
   ];
 

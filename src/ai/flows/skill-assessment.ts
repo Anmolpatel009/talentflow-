@@ -31,12 +31,14 @@ const generateSkillAssessmentTestPrompt = ai.definePrompt({
   name: 'generateSkillAssessmentTestPrompt',
   input: {schema: SkillAssessmentInputSchema},
   output: {schema: SkillAssessmentOutputSchema},
-  prompt: `You are an AI skilled at generating skill assessment tests.
+  prompt: `You are an AI expert at creating professional skill assessments.
 
-  Generate a skill assessment test for the following skill:
-  {{skill}}
-
-  The test should be comprehensive and challenging, designed to evaluate the proficiency of freelancers applying for the 1% Club. Return the test as a string.
+  Generate a skill assessment test for the following skill: {{skill}}.
+  
+  The test should be comprehensive and challenging, designed to evaluate the proficiency of freelancers applying for the 1% Club.
+  It should include a mix of multiple-choice questions, true/false, and one or two short open-ended questions to test conceptual and practical knowledge.
+  
+  Return the entire test as a single, well-formatted string.
   `,
 });
 
