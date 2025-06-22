@@ -16,14 +16,11 @@ import {
   Users,
   LifeBuoy,
   Settings,
-  LogOut,
   Search,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -78,20 +75,6 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
-        <Separator className="my-2" />
-         <div className="flex items-center gap-3 p-2">
-            <Avatar>
-                <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="user avatar" />
-                <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 overflow-hidden">
-                <p className="font-semibold text-sm truncate">John Doe</p>
-                <p className="text-xs text-muted-foreground truncate">john.doe@email.com</p>
-            </div>
-            <Link href="/" title="Log Out">
-                <LogOut className="w-5 h-5 text-muted-foreground hover:text-foreground"/>
-            </Link>
-         </div>
       </SidebarFooter>
     </Sidebar>
   );
