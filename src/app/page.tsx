@@ -36,10 +36,10 @@ export default function Home() {
           <Logo />
           <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
-              <Link href="/dashboard">Log In</Link>
+              <Link href="/login">Log In</Link>
             </Button>
             <Button asChild>
-              <Link href="/dashboard">Sign Up</Link>
+              <Link href="/signup">Sign Up</Link>
             </Button>
           </div>
         </nav>
@@ -68,10 +68,10 @@ export default function Home() {
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button size="lg" asChild>
-                <Link href="/client-dashboard">Find Talent</Link>
+                <Link href="/signup">Find Talent</Link>
               </Button>
               <Button size="lg" variant="secondary" asChild>
-                <Link href="/freelancer-dashboard">Find Work</Link>
+                <Link href="/signup">Find Work</Link>
               </Button>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function Home() {
               </p>
               <div className="mt-8">
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
-                  <Link href="/dashboard">Join NearTask Now</Link>
+                  <Link href="/signup">Join NearTask Now</Link>
                 </Button>
               </div>
             </div>
