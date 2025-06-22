@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createAssessment } from "@/app/(app)/one-percent-club/actions";
@@ -7,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BrainCircuit, Loader2 } from "lucide-react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -27,7 +29,7 @@ function SubmitButton() {
 
 export function OnePercentClubClient() {
   const initialState = { message: null, test: null, error: false };
-  const [state, dispatch] = useFormState(createAssessment, initialState);
+  const [state, dispatch] = useActionState(createAssessment, initialState);
 
   return (
     <Card className="h-full flex flex-col">

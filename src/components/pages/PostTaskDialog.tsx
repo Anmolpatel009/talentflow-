@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createTask } from "@/app/(app)/tasks/actions";
@@ -9,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, PlusCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useEffect, useState, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 
 const taskCategories = [
   "Design",
@@ -40,7 +41,7 @@ function SubmitButton() {
 
 export function PostTaskDialog() {
   const initialState = { message: null, errors: null, success: false };
-  const [state, dispatch] = useFormState(createTask, initialState);
+  const [state, dispatch] = useActionState(createTask, initialState);
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 

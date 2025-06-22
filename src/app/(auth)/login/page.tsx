@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { login } from "@/app/(auth)/actions";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 function SubmitButton() {
@@ -25,7 +25,7 @@ function SubmitButton() {
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [state, formAction] = useFormState(login, null);
+  const [state, formAction] = useActionState(login, null);
 
   useEffect(() => {
     if (state?.success) {
