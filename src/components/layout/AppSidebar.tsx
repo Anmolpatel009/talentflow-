@@ -14,13 +14,17 @@ import {
   Briefcase,
   Award,
   Users,
-  LifeBuoy,
-  Settings,
   Search,
+  LogOut,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { logout } from "@/app/(auth)/actions";
+import { Separator } from "../ui/separator";
+import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Button } from "../ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -30,7 +34,12 @@ const navItems = [
   { href: "/build-together", icon: Users, label: "Build Together" },
 ];
 
-export function AppSidebar() {
+type User = {
+  name: string;
+  email: string;
+};
+
+export function AppSidebar({ user }: { user: User }) {
   const pathname = usePathname();
 
   return (
@@ -44,7 +53,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href}
+                isActive={pathname.startsWith(item.href)}
                 tooltip={item.label}
               >
                 <Link href={item.href}>
@@ -57,24 +66,28 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-           <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Support">
-                <Link href="#">
-                  <LifeBuoy />
-                  <span>Support</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Settings">
-                <Link href="#">
-                  <Settings />
-                  <span>Settings</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
+         <Separator className="my-1" />
+         <div className="flex items-center gap-3 p-2">
+            <Avatar className="h-9 w-9">
+              <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 overflow-hidden">
+                <p className="truncate text-sm font-semibold">{user.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+            </div>
+             <form action={logout}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" type="submit" className="h-8 w-8">
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center">
+                  Log out
+                </TooltipContent>
+              </Tooltip>
+            </form>
+         </div>
       </SidebarFooter>
     </Sidebar>
   );

@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { redirect } from 'next/navigation'
+import { createSession, deleteSession } from "@/lib/session";
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -62,16 +63,26 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
     }
   }
 
-  console.log("Logging in user:", validatedFields.data);
-  // --- Placeholder for Firebase Auth ---
-  // In a real app, you would:
-  // 1. On the client, use signInWithEmailAndPassword.
-  // 2. Get the ID token from the result.
-  // 3. Send the token to a server-side endpoint.
-  // 4. On the server, verify the token and create a session cookie.
-  // 5. Redirect the user.
+  // --- Placeholder for Authentication Logic ---
+  // Here, you would verify the user's password against a stored hash.
+  // For this prototype, we assume the login is always successful.
 
-  // For this prototype, we'll just simulate success and redirect.
-  // The redirect will be handled on the client-side based on the success flag.
+  const email = validatedFields.data.email;
+  // Mock user name from email for display purposes
+  const name = email.split('@')[0]
+    .split('.')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+  
+  await createSession({
+    email,
+    name,
+  });
+
   return { success: true, message: "Login successful!" };
+}
+
+export async function logout() {
+  await deleteSession();
+  redirect("/login");
 }
