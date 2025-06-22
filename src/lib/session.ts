@@ -11,6 +11,7 @@ export type UserPayload = {
   name: string;
   email: string;
   role: 'freelancer' | 'client';
+  location: string;
 }
 
 export async function createSession(payload: UserPayload) {

@@ -36,7 +36,7 @@ export default function SignupPage() {
       });
       const dashboardUrl = state.role === 'client' ? '/client-dashboard' : '/freelancer-dashboard';
       router.push(dashboardUrl);
-    } else if (state?.message) {
+    } else if (state?.message && !state.success) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -56,14 +56,22 @@ export default function SignupPage() {
            <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input id="name" name="name" placeholder="John Doe" required />
+            {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name.join(", ")}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" placeholder="name@example.com" required />
+            {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email.join(", ")}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" required />
+            {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password.join(", ")}</p>}
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="location">Your Location</Label>
+            <Input id="location" name="location" placeholder="e.g., San Francisco, CA" required />
+             {state?.errors?.location && <p className="text-sm text-destructive">{state.errors.location.join(", ")}</p>}
           </div>
           <div className="space-y-3">
              <Label>How will you use NearTask?</Label>
