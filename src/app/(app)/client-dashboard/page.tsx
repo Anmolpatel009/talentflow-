@@ -9,31 +9,28 @@ export default function ClientDashboardPage() {
   const stats = [
     {
       title: "Posted Tasks",
-      value: "3",
+      value: "0",
       icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
     },
     {
       title: "Available Freelancers",
-      value: "87",
+      value: "87", // This is a platform-wide stat
       icon: <Users className="h-6 w-6 text-muted-foreground" />,
     },
     {
       title: "Proposals Received",
-      value: "15",
+      value: "0",
       icon: <Star className="h-6 w-6 text-muted-foreground" />,
     },
      {
       title: "New Messages",
-      value: "3",
+      value: "0",
       icon: <MessageSquare className="h-6 w-6 text-muted-foreground" />,
     },
   ];
 
-  const postedTasks = [
-    { id: 1, title: 'Design a new logo for my coffee shop', category: 'Design', budget: 300, proposals: 5 },
-    { id: 2, title: 'Build a simple landing page with React', category: 'Web Development', budget: 800, proposals: 2 },
-    { id: 4, title: 'Photoshoot for a new clothing line', category: 'Photography', budget: 500, proposals: 8 },
-  ];
+  // For a new user, this will be empty. In a real app, this data would be fetched.
+  const postedTasks: any[] = [];
 
   return (
     <div className="space-y-8">
@@ -78,7 +75,8 @@ export default function ClientDashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {postedTasks.map((task) => (
+              {postedTasks.length > 0 ? (
+                postedTasks.map((task) => (
                 <TableRow key={task.id}>
                   <TableCell className="font-medium">{task.title}</TableCell>
                   <TableCell>
@@ -90,7 +88,13 @@ export default function ClientDashboardPage() {
                     <Button variant="outline" size="sm">Manage Task</Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    You haven't posted any tasks yet.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

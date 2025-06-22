@@ -8,26 +8,28 @@ export default function FreelancerDashboardPage() {
   const stats = [
     {
       title: "Active Projects",
-      value: "2",
+      value: "0",
       icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
     },
     {
       title: "Proposals Sent",
-      value: "15",
+      value: "0",
       icon: <Star className="h-6 w-6 text-muted-foreground" />,
     },
     {
       title: "Total Earnings",
-      value: "$1,250",
+      value: "$0",
       icon: <DollarSign className="h-6 w-6 text-muted-foreground" />,
     },
      {
       title: "New Messages",
-      value: "5",
+      value: "0",
       icon: <MessageSquare className="h-6 w-6 text-muted-foreground" />,
     },
   ];
 
+  // The recommended tasks list shows available jobs on the platform.
+  // In a real app, this would be dynamically fetched and personalized.
   const recentTasks = [
     { id: 1, title: 'Design a new logo for my coffee shop', category: 'Design', budget: 300, distance: '1.2 km' },
     { id: 2, title: 'Build a simple landing page with React', category: 'Web Development', budget: 800, distance: '3.5 km' },
