@@ -1,15 +1,16 @@
 import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import type {redirect} from 'next/navigation';
 
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
 const aDayInSeconds = 24 * 60 * 60;
 
-type UserPayload = {
+export type UserPayload = {
   name: string;
   email: string;
+  role: 'freelancer' | 'client';
 }
 
 export async function createSession(payload: UserPayload) {

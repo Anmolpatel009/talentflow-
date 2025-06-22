@@ -25,6 +25,7 @@ import { Separator } from "../ui/separator";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import type { UserPayload } from "@/lib/session";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -34,13 +35,14 @@ const navItems = [
   { href: "/build-together", icon: Users, label: "Build Together" },
 ];
 
-type User = {
-  name: string;
-  email: string;
-};
-
-export function AppSidebar({ user }: { user: User }) {
+export function AppSidebar({ user }: { user: UserPayload }) {
   const pathname = usePathname();
+
+  const dashboardPath = user.role === 'client' ? '/client-dashboard' : '/freelancer-dashboard';
+  
+  const finalNavItems = navItems.map(item => 
+    item.href === '/dashboard' ? { ...item, href: dashboardPath } : item
+  );
 
   return (
     <Sidebar>
@@ -49,7 +51,7 @@ export function AppSidebar({ user }: { user: User }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
+          {finalNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild

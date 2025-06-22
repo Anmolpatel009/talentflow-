@@ -28,12 +28,13 @@ export default function LoginPage() {
   const [state, formAction] = useActionState(login, null);
 
   useEffect(() => {
-    if (state?.success) {
+    if (state?.success && state.role) {
       toast({
         title: "Success!",
         description: "You have been logged in.",
       });
-      router.push("/dashboard");
+      const dashboardUrl = state.role === 'client' ? '/client-dashboard' : '/freelancer-dashboard';
+      router.push(dashboardUrl);
     } else if (state?.message) {
       toast({
         variant: "destructive",
@@ -53,7 +54,7 @@ export default function LoginPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="name@example.com" required />
+            <Input id="email" name="email" type="email" placeholder="name@example.com or client@example.com" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>

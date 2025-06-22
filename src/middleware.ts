@@ -2,12 +2,10 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 
 const protectedRoutes = ['/dashboard', '/client-dashboard', '/freelancer-dashboard', '/tasks', '/find-freelancers', '/one-percent-club', '/build-together'];
-const publicRoutes = ['/login', '/signup', '/'];
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const isProtectedRoute = protectedRoutes.some((prefix) => path.startsWith(prefix));
-  const isPublicRoute = publicRoutes.includes(path);
 
   const session = await getSession();
 
@@ -15,11 +13,13 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
 
-  if (
-    session &&
-    (path.startsWith('/login') || path.startsWith('/signup'))
-  ) {
-    return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+  if (session) {
+    const dashboardUrl = session.role === 'client' ? '/client-dashboard' : '/freelancer-dashboard';
+
+    // If logged in, redirect from auth pages or generic dashboard to the specific dashboard
+    if (path.startsWith('/login') || path.startsWith('/signup') || path === '/dashboard') {
+      return NextResponse.redirect(new URL(dashboardUrl, req.nextUrl));
+    }
   }
   
   return NextResponse.next();

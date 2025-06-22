@@ -29,12 +29,13 @@ export default function SignupPage() {
   const [state, formAction] = useActionState(signup, null);
 
   useEffect(() => {
-    if (state?.success) {
+    if (state?.success && state.role) {
       toast({
-        title: "Success!",
-        description: "Your account has been created. Please log in.",
+        title: "Welcome!",
+        description: "Your account has been created successfully.",
       });
-      router.push("/login");
+      const dashboardUrl = state.role === 'client' ? '/client-dashboard' : '/freelancer-dashboard';
+      router.push(dashboardUrl);
     } else if (state?.message) {
       toast({
         variant: "destructive",
