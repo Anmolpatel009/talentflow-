@@ -20,7 +20,7 @@ export default function OnePercentClubPage() {
           The 1% Club
         </h1>
         <p className="text-muted-foreground">
-          An exclusive hub for the top-tier talent on Localance.
+          An exclusive hub for the top-tier talent on NearTask.
         </p>
       </div>
 

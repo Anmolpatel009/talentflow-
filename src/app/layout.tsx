@@ -8,8 +8,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
 
 export const metadata: Metadata = {
-  title: 'Localance - Find Freelancers Nearby',
-  description: 'A location-based freelancing platform to connect you with local talent instantly.',
+  title: 'NearTask - Find Freelancers Nearby',
+  description: 'A location-based freelancing platform that connects task posters with nearby freelancers in real-time.',
 };
 
 export default function RootLayout({

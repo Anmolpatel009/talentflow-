@@ -80,7 +80,7 @@ export default function Home() {
         <section id="features" className="py-20 lg:py-24 bg-card">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="font-headline text-3xl font-bold">Why Localance?</h2>
+              <h2 className="font-headline text-3xl font-bold">Why NearTask?</h2>
               <p className="mt-2 max-w-2xl mx-auto text-muted-foreground">
                 All the tools you need to hire or get hired, locally.
               </p>
@@ -108,7 +108,7 @@ export default function Home() {
               </p>
               <div className="mt-8">
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
-                  <Link href="/dashboard">Join Localance Now</Link>
+                  <Link href="/dashboard">Join NearTask Now</Link>
                 </Button>
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function Home() {
 
       <footer className="py-6 bg-card border-t">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Localance. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} NearTask. All rights reserved.</p>
         </div>
       </footer>
     </div>
