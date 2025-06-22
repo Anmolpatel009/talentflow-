@@ -17,6 +17,7 @@ import {
   LifeBuoy,
   Settings,
   LogOut,
+  Search,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -27,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/tasks", icon: Briefcase, label: "Tasks" },
+  { href: "/find-freelancers", icon: Search, label: "Find Freelancers" },
   { href: "/one-percent-club", icon: Award, label: "1% Club" },
   { href: "/build-together", icon: Users, label: "Build Together" },
 ];
