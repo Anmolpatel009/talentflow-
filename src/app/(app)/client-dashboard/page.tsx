@@ -4,12 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PostTaskDialog } from "@/components/pages/PostTaskDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Briefcase, Users, Star, MessageSquare } from "lucide-react";
+import { getSession } from "@/lib/session";
+import { getTasksForClient, type Task } from "@/lib/tasks";
 
-export default function ClientDashboardPage() {
+export default async function ClientDashboardPage() {
+  const user = await getSession();
+  const postedTasks: Task[] = user ? await getTasksForClient(user.email) : [];
+  
+  const proposalsReceived = postedTasks.reduce((acc, task) => acc + task.proposals, 0);
+
   const stats = [
     {
       title: "Posted Tasks",
-      value: "0",
+      value: postedTasks.length.toString(),
       icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
     },
     {
@@ -19,7 +26,7 @@ export default function ClientDashboardPage() {
     },
     {
       title: "Proposals Received",
-      value: "0",
+      value: proposalsReceived.toString(),
       icon: <Star className="h-6 w-6 text-muted-foreground" />,
     },
      {
@@ -28,9 +35,6 @@ export default function ClientDashboardPage() {
       icon: <MessageSquare className="h-6 w-6 text-muted-foreground" />,
     },
   ];
-
-  // For a new user, this will be empty. In a real app, this data would be fetched.
-  const postedTasks: any[] = [];
 
   return (
     <div className="space-y-8">
@@ -91,7 +95,7 @@ export default function ClientDashboardPage() {
               ))) : (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
-                    You haven't posted any tasks yet.
+                    You haven't posted any tasks yet. Get started by posting a new task.
                   </TableCell>
                 </TableRow>
               )}

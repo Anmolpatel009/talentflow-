@@ -2,6 +2,8 @@
 
 import {revalidatePath} from 'next/cache';
 import {z} from 'zod';
+import { getSession } from '@/lib/session';
+import { createTaskForClient } from '@/lib/tasks';
 
 const taskSchema = z.object({
   title: z
@@ -46,15 +48,34 @@ export async function createTask(
     };
   }
 
-  // Here you would typically save the data to your database.
-  // For this prototype, we'll just log it to the console.
-  console.log('New task created:', validatedFields.data);
+  const session = await getSession();
+  if (!session?.email) {
+    return {
+      message: 'You must be logged in to post a task.',
+      success: false,
+    }
+  }
 
-  // Revalidate the tasks page to show the new task if we were updating a list.
-  revalidatePath('/tasks');
-
-  return {
-    message: `Task "${validatedFields.data.title}" posted successfully!`,
-    success: true,
-  };
+  try {
+    await createTaskForClient({
+      clientId: session.email,
+      title: validatedFields.data.title,
+      description: validatedFields.data.description,
+      category: validatedFields.data.category,
+      budget: validatedFields.data.budget,
+    });
+  
+    // Revalidate the client dashboard to show the new task.
+    revalidatePath('/client-dashboard');
+  
+    return {
+      message: `Task "${validatedFields.data.title}" posted successfully!`,
+      success: true,
+    };
+  } catch(error) {
+     return {
+      message: 'There was an issue posting your task. Please try again.',
+      success: false,
+    };
+  }
 }
