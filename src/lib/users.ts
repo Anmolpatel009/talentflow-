@@ -1,14 +1,13 @@
 // src/lib/users.ts
 import 'server-only';
-
-// This file simulates a user database.
-// In a production application, you would replace this with a real database like MongoDB or Firestore.
+import { db } from './firebase';
+import { collection, query, where, getDocs, addDoc, doc, getDoc } from 'firebase/firestore';
 
 export type User = {
   id: string;
   name: string;
   email: string;
-  passwordHash: string; // In a real app, never store plain text passwords
+  passwordHash: string; // In a real app, use Firebase Auth instead of storing hashes
   role: 'freelancer' | 'client';
   location: string;
   skills: string[];
@@ -18,57 +17,51 @@ export type User = {
   distance: string; // Mock distance for display
 };
 
-// In-memory array to store users, simulating a database table.
-const users: User[] = [
-    {
-        id: '1',
-        name: 'Aria Montgomery',
-        email: 'aria@example.com',
-        passwordHash: 'hashedpassword',
-        role: 'freelancer',
-        location: 'San Francisco, CA',
-        skills: ['Figma', 'UI/UX', 'Web Design', 'Mobile Apps'],
-        skill: 'Lead UI/UX Designer',
-        avatar: 'https://placehold.co/100x100.png',
-        hint: 'woman portrait',
-        distance: '1.5 km',
-    },
-    {
-        id: '2',
-        name: 'Ken Adams',
-        email: 'ken@example.com',
-        passwordHash: 'hashedpassword',
-        role: 'freelancer',
-        location: 'San Francisco, CA',
-        skills: ['Go', 'Docker', 'Kubernetes', 'gRPC'],
-        skill: 'Senior Go Developer',
-        avatar: 'https://placehold.co/100x100.png',
-        hint: 'man portrait',
-        distance: '0.8 km'
-    },
-];
-
-let nextId = users.length + 1;
+const usersCollection = collection(db, 'users');
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
-  return users.find((user) => user.email.toLowerCase() === email.toLowerCase());
+  const q = query(usersCollection, where("email", "==", email.toLowerCase()));
+  const querySnapshot = await getDocs(q);
+  
+  if (querySnapshot.empty) {
+    return undefined;
+  }
+  
+  const userDoc = querySnapshot.docs[0];
+  return { id: userDoc.id, ...userDoc.data() } as User;
 }
 
 export async function createUser(data: Omit<User, 'id' | 'passwordHash' | 'avatar' | 'hint' | 'distance'> & { password?: string }): Promise<User> {
-  const newUser: User = {
+  const newUserPayload = {
     ...data,
-    id: (nextId++).toString(),
-    passwordHash: `hashed_${data.password}`, // Simple mock hashing
+    email: data.email.toLowerCase(),
+    passwordHash: `hashed_${data.password}`, // In a real app, use Firebase Auth instead of storing passwords.
     avatar: 'https://placehold.co/100x100.png',
     hint: 'person portrait',
     distance: `${(Math.random() * 5).toFixed(1)} km`, // Mock distance
     skill: data.skills[0] || 'Specialist',
   };
-  users.push(newUser);
-  console.log('Current users:', users);
-  return newUser;
+  // The password should not be stored in the document.
+  delete (newUserPayload as any).password;
+
+  const docRef = await addDoc(usersCollection, newUserPayload);
+
+  return {
+    ...newUserPayload,
+    id: docRef.id,
+  };
 }
 
 export async function getFreelancers(): Promise<User[]> {
-  return users.filter((user) => user.role === 'freelancer');
+  const q = query(usersCollection, where("role", "==", "freelancer"));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+      return [];
+  }
+
+  return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+  })) as User[];
 }

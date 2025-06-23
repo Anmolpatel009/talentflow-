@@ -1,6 +1,7 @@
-// This file simulates a database for managing tasks.
-// In a production application, you would replace this with a real database like MongoDB, PostgreSQL, or Firestore.
+// This file manages tasks using Firestore.
 import "server-only";
+import { db } from './firebase';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 export type Task = {
   id: string;
@@ -12,58 +13,45 @@ export type Task = {
   proposals: number;
 };
 
-// We'll use a simple in-memory array to store our tasks.
-// This will reset every time the server restarts.
-const tasks: Task[] = [
-  {
-    id: "1",
-    clientId: "client@example.com",
-    title: "Design a new logo for my coffee shop",
-    description: "Looking for a creative designer to create a modern and friendly logo for a new coffee shop brand. The logo should be versatile for use on cups, signs, and social media.",
-    category: "Design",
-    budget: 300,
-    proposals: 3,
-  },
-   {
-    id: "2",
-    clientId: "anotherclient@example.com",
-    title: "Build a simple landing page with React",
-    description: "Need a developer to build a responsive one-page landing site using React and Next.js. The design is ready in Figma. Must be pixel-perfect.",
-    category: "Web Development",
-    budget: 800,
-    proposals: 5,
-  },
-];
+const tasksCollection = collection(db, 'tasks');
 
 /**
- * Retrieves all tasks posted by a specific client.
+ * Retrieves all tasks posted by a specific client from Firestore.
  * @param clientId The email of the client whose tasks to fetch.
  * @returns A promise that resolves to an array of tasks.
  */
 export async function getTasksForClient(clientId: string): Promise<Task[]> {
-  // In a real app, this would be a database query:
-  // e.g., db.collection('tasks').where('clientId', '==', clientId).get()
-  return tasks.filter((task) => task.clientId === clientId);
+  // In a real app, you might want to add error handling for the database query.
+  const q = query(tasksCollection, where("clientId", "==", clientId));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    return [];
+  }
+
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Task[];
 }
 
 /**
- * Creates a new task for a client.
+ * Creates a new task for a client in Firestore.
  * @param taskData The data for the new task, excluding id and proposal count.
  * @returns A promise that resolves to the newly created task.
  */
 export async function createTaskForClient(
   taskData: Omit<Task, "id" | "proposals">
 ): Promise<Task> {
-  const newId = (tasks.length + 1).toString();
-  const newTask: Task = {
+  const newTaskPayload = {
     ...taskData,
-    id: newId,
     proposals: 0, // New tasks always start with 0 proposals
   };
 
-  // In a real app, this would be a database insert:
-  // e.g., db.collection('tasks').add(newTask)
-  tasks.push(newTask);
-  console.log("New task created and added to the store:", newTask);
-  return newTask;
+  const docRef = await addDoc(tasksCollection, newTaskPayload);
+  
+  return {
+    ...newTaskPayload,
+    id: docRef.id,
+  };
 }
