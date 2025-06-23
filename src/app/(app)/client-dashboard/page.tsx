@@ -7,6 +7,7 @@ import { Briefcase, Users, Star, MessageSquare } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getTasksForClient, type Task } from "@/lib/tasks";
 import { getFreelancerCount } from "@/lib/users";
+import Link from "next/link";
 
 export default async function ClientDashboardPage() {
   const user = await getSession();
@@ -91,7 +92,9 @@ export default async function ClientDashboardPage() {
                   <TableCell>{task.budget.toFixed(2)}</TableCell>
                   <TableCell className="text-center">{task.proposals}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">Manage Task</Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/tasks/${task.id}`}>Manage Task</Link>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))) : (

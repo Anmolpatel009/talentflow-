@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getAllTasks, type TaskWithUser } from "@/lib/tasks";
+import Link from "next/link";
 
 export default async function FreelancerDashboardPage() {
   // In a real app, these values would be fetched from the database
@@ -88,7 +89,9 @@ export default async function FreelancerDashboardPage() {
                     <TableCell>{task.budget.toFixed(2)}</TableCell>
                     <TableCell>{task.clientName}</TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm">View & Apply</Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/tasks/${task.id}`}>View & Apply</Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -99,7 +102,7 @@ export default async function FreelancerDashboardPage() {
                     </TableCell>
                 </TableRow>
               )}
-            </Body>
+            </TableBody>
           </Table>
         </CardContent>
       </Card>

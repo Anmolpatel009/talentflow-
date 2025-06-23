@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { getAllTasks, type TaskWithUser } from "@/lib/tasks";
+import Link from "next/link";
 
 export default async function TasksPage() {
   const tasks: TaskWithUser[] = await getAllTasks();
@@ -39,7 +40,9 @@ export default async function TasksPage() {
                     <TableCell>{task.budget.toFixed(2)}</TableCell>
                     <TableCell>{task.clientName}</TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm">View & Apply</Button>
+                       <Button variant="outline" size="sm" asChild>
+                        <Link href={`/tasks/${task.id}`}>View & Apply</Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

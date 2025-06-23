@@ -1,7 +1,7 @@
 // This file manages tasks using Firestore.
 import "server-only";
 import { db } from './firebase';
-import { collection, query, where, getDocs, addDoc, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, getDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import type { User } from './users';
 
 export type Task = {
@@ -100,4 +100,46 @@ export async function createTaskForClient(
     ...newTaskPayload,
     id: docRef.id,
   };
+}
+
+/**
+ * Retrieves a single task by its ID from Firestore.
+ * @param id The ID of the task to fetch.
+ * @returns A promise that resolves to the task data or null if not found.
+ */
+export async function getTaskById(id: string): Promise<TaskWithUser | null> {
+  const taskDocRef = doc(db, 'tasks', id);
+  const taskDoc = await getDoc(taskDocRef);
+
+  if (!taskDoc.exists()) {
+    return null;
+  }
+
+  const taskData = taskDoc.data() as Omit<Task, 'id'>;
+
+  const userQuery = query(collection(db, 'users'), where("email", "==", taskData.clientId));
+  const userSnapshot = await getDocs(userQuery);
+  
+  let clientName = 'Unknown Client';
+  if (!userSnapshot.empty) {
+      const clientData = userSnapshot.docs[0].data() as User;
+      clientName = clientData.name;
+  }
+
+  return {
+    id: taskDoc.id,
+    ...taskData,
+    clientName,
+  };
+}
+
+/**
+ * Increments the proposal count for a specific task.
+ * @param taskId The ID of the task to update.
+ */
+export async function applyToTask(taskId: string) {
+    const taskDocRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskDocRef, {
+        proposals: increment(1)
+    });
 }
