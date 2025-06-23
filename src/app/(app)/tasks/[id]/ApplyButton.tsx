@@ -26,9 +26,8 @@ function SubmitButton() {
 
 export function ApplyButton({ taskId }: { taskId: string }) {
     const { toast } = useToast();
-    // The initial state needs to match the return type of the action.
     const initialState = { success: false, message: "" };
-    const [state, formAction] = useActionState(applyForTask.bind(null, taskId), initialState);
+    const [state, formAction] = useActionState(applyForTask, initialState);
     
     useEffect(() => {
         if (state.message) {
@@ -49,6 +48,7 @@ export function ApplyButton({ taskId }: { taskId: string }) {
 
     return (
         <form action={formAction}>
+            <input type="hidden" name="taskId" value={taskId} />
             <SubmitButton />
         </form>
     );

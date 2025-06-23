@@ -4,11 +4,21 @@ import { revalidatePath } from 'next/cache';
 import { applyToTask as applyToTaskInDb } from '@/lib/tasks';
 import { getSession } from '@/lib/session';
 
-export async function applyForTask(taskId: string): Promise<{ success: boolean; message: string }> {
+type State = {
+    success: boolean;
+    message: string;
+}
+
+export async function applyForTask(prevState: State, formData: FormData): Promise<State> {
     const session = await getSession();
 
     if (!session || session.role !== 'freelancer') {
         return { success: false, message: "Only freelancers can apply for tasks." };
+    }
+    
+    const taskId = formData.get('taskId') as string;
+    if (!taskId) {
+        return { success: false, message: "Task ID is missing." };
     }
 
     try {
