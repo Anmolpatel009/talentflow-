@@ -3,8 +3,9 @@ import { Briefcase, Star, DollarSign, MessageSquare } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getAllTasks, type TaskWithUser } from "@/lib/tasks";
 
-export default function FreelancerDashboardPage() {
+export default async function FreelancerDashboardPage() {
   const stats = [
     {
       title: "Active Projects",
@@ -28,13 +29,7 @@ export default function FreelancerDashboardPage() {
     },
   ];
 
-  // The recommended tasks list shows available jobs on the platform.
-  // In a real app, this would be dynamically fetched and personalized.
-  const recentTasks = [
-    { id: 1, title: 'Design a new logo for my coffee shop', category: 'Design', budget: 300, distance: '1.2 km' },
-    { id: 2, title: 'Build a simple landing page with React', category: 'Web Development', budget: 800, distance: '3.5 km' },
-    { id: 3, title: 'Write 3 blog posts about sustainable living', category: 'Writing', budget: 150, distance: '0.8 km' },
-  ];
+  const recentTasks: TaskWithUser[] = await getAllTasks();
 
   return (
     <div className="space-y-8">
@@ -71,24 +66,32 @@ export default function FreelancerDashboardPage() {
                 <TableHead>Task</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Budget ($)</TableHead>
-                <TableHead>Distance</TableHead>
+                <TableHead>Posted By</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentTasks.map((task) => (
-                <TableRow key={task.id}>
-                  <TableCell className="font-medium">{task.title}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{task.category}</Badge>
-                  </TableCell>
-                  <TableCell>{task.budget.toFixed(2)}</TableCell>
-                  <TableCell>{task.distance}</TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm">View & Apply</Button>
-                  </TableCell>
+               {recentTasks.length > 0 ? (
+                recentTasks.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell className="font-medium">{task.title}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{task.category}</Badge>
+                    </TableCell>
+                    <TableCell>{task.budget.toFixed(2)}</TableCell>
+                    <TableCell>{task.clientName}</TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="sm">View & Apply</Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                        No tasks have been posted yet. Check back soon!
+                    </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

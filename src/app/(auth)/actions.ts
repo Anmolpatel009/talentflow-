@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -90,25 +91,17 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
 
   const { email, password } = validatedFields.data;
 
-  let user = await findUserByEmail(email);
+  const user = await findUserByEmail(email);
 
-  // For this demo, if the user doesn't exist on login, we create them
-  // This maintains the simple "any email works" login experience from before.
-  if (!user) {
-    const role = email.toLowerCase().includes('client') ? 'client' : 'freelancer';
-    const skills = role === 'freelancer' ? ['Web Development', 'React'] : [];
-    user = await createUser({
-        name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        email,
-        password,
-        location: 'New York, NY', // Default location for auto-created users
-        role,
-        skills,
-        skill: skills[0] || '',
-    });
+  // In a production app, you would compare hashed passwords.
+  // For this prototype, we'll do a simple string comparison.
+  // The stored "hash" is just `hashed_${password}`.
+  if (!user || user.passwordHash !== `hashed_${password}`) {
+    return {
+      message: 'Invalid email or password.',
+      success: false
+    }
   }
-
-  // In a real app, you'd compare the hashed password. Here we just check for existence.
   
   await createSession({
     email: user.email,

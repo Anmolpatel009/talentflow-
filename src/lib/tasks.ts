@@ -1,7 +1,8 @@
 // This file manages tasks using Firestore.
 import "server-only";
 import { db } from './firebase';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, getDoc, doc } from 'firebase/firestore';
+import type { User } from './users';
 
 export type Task = {
   id: string;
@@ -12,6 +13,10 @@ export type Task = {
   budget: number;
   proposals: number;
 };
+
+export type TaskWithUser = Task & {
+  clientName?: string;
+}
 
 const tasksCollection = collection(db, 'tasks');
 
@@ -34,6 +39,47 @@ export async function getTasksForClient(clientId: string): Promise<Task[]> {
     ...doc.data()
   })) as Task[];
 }
+
+
+/**
+ * Retrieves all tasks from Firestore and includes the client's name.
+ * @returns A promise that resolves to an array of all tasks with client info.
+ */
+export async function getAllTasks(): Promise<TaskWithUser[]> {
+  const q = query(tasksCollection);
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    return [];
+  }
+
+  const tasks = await Promise.all(
+    querySnapshot.docs.map(async (taskDoc) => {
+      const taskData = taskDoc.data() as Omit<Task, 'id'>;
+      
+      // Fetch the user data for the client who posted the task
+      // This is inefficient (N+1 problem) but acceptable for a prototype.
+      // In a real app, you might denormalize the client's name onto the task document.
+      const userQuery = query(collection(db, 'users'), where("email", "==", taskData.clientId));
+      const userSnapshot = await getDocs(userQuery);
+      
+      let clientName = 'Unknown Client';
+      if (!userSnapshot.empty) {
+          const clientData = userSnapshot.docs[0].data() as User;
+          clientName = clientData.name;
+      }
+
+      return {
+        id: taskDoc.id,
+        ...taskData,
+        clientName: clientName,
+      };
+    })
+  );
+
+  return tasks;
+}
+
 
 /**
  * Creates a new task for a client in Firestore.
