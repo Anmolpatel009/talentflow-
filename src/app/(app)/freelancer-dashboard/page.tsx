@@ -6,25 +6,32 @@ import { Button } from "@/components/ui/button";
 import { getAllTasks, type TaskWithUser } from "@/lib/tasks";
 
 export default async function FreelancerDashboardPage() {
+  // In a real app, these values would be fetched from the database
+  // based on the logged-in freelancer's activity.
+  const activeProjects = 0;
+  const proposalsSent = 0;
+  const totalEarnings = 0;
+  const newMessages = 0;
+
   const stats = [
     {
       title: "Active Projects",
-      value: "0",
+      value: activeProjects.toString(),
       icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
     },
     {
       title: "Proposals Sent",
-      value: "0",
+      value: proposalsSent.toString(),
       icon: <Star className="h-6 w-6 text-muted-foreground" />,
     },
     {
       title: "Total Earnings",
-      value: "$0",
+      value: `$${totalEarnings.toFixed(2)}`,
       icon: <DollarSign className="h-6 w-6 text-muted-foreground" />,
     },
      {
       title: "New Messages",
-      value: "0",
+      value: newMessages.toString(),
       icon: <MessageSquare className="h-6 w-6 text-muted-foreground" />,
     },
   ];
@@ -92,7 +99,7 @@ export default async function FreelancerDashboardPage() {
                     </TableCell>
                 </TableRow>
               )}
-            </TableBody>
+            </Body>
           </Table>
         </CardContent>
       </Card>

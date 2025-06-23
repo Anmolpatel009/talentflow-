@@ -6,10 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Briefcase, Users, Star, MessageSquare } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getTasksForClient, type Task } from "@/lib/tasks";
+import { getFreelancerCount } from "@/lib/users";
 
 export default async function ClientDashboardPage() {
   const user = await getSession();
   const postedTasks: Task[] = user ? await getTasksForClient(user.email) : [];
+  const freelancerCount = await getFreelancerCount();
   
   const proposalsReceived = postedTasks.reduce((acc, task) => acc + task.proposals, 0);
 
@@ -21,7 +23,7 @@ export default async function ClientDashboardPage() {
     },
     {
       title: "Available Freelancers",
-      value: "87", // This is a platform-wide stat
+      value: freelancerCount.toString(),
       icon: <Users className="h-6 w-6 text-muted-foreground" />,
     },
     {

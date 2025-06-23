@@ -1,7 +1,7 @@
 // src/lib/users.ts
 import 'server-only';
 import { db } from './firebase';
-import { collection, query, where, getDocs, addDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc, getCountFromServer } from 'firebase/firestore';
 
 export type User = {
   id: string;
@@ -64,4 +64,10 @@ export async function getFreelancers(): Promise<User[]> {
       id: doc.id,
       ...doc.data()
   })) as User[];
+}
+
+export async function getFreelancerCount(): Promise<number> {
+    const q = query(usersCollection, where("role", "==", "freelancer"));
+    const snapshot = await getCountFromServer(q);
+    return snapshot.data().count;
 }
