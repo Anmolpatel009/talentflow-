@@ -4,6 +4,11 @@ import { cookies } from 'next/headers';
 import type {redirect} from 'next/navigation';
 
 const secretKey = process.env.SESSION_SECRET;
+
+if (!secretKey) {
+  throw new Error('The environment variable SESSION_SECRET is not set. Please add it to your .env file.');
+}
+
 const encodedKey = new TextEncoder().encode(secretKey);
 const aDayInSeconds = 24 * 60 * 60;
 
