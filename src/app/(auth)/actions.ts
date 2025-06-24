@@ -69,6 +69,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
   });
 
   await createSession({
+    uid: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
@@ -104,6 +105,7 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
   }
   
   await createSession({
+    uid: user.id,
     email: user.email,
     name: user.name,
     role: user.role,

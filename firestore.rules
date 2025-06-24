@@ -1,24 +1,29 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Users can be seen by anyone, but only created during signup.
-    // For this prototype, users cannot update or delete profiles.
+
+    // Users can be created by anyone (for signup)
+    // Users can be read by anyone (for freelancer profiles)
     match /users/{userId} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if false; 
+      allow read, create: if true;
+      // Allow users to update their own profile. Checks if the requester's UID matches the document ID.
+      allow update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Tasks can be seen by anyone.
-    // Only authenticated users can create or apply to (update) tasks.
+    // Tasks can be read by anyone
+    // Tasks can only be created by logged-in users
     match /tasks/{taskId} {
       allow read: if true;
       allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if false;
+    }
+
+    match /tasks/{taskId}/proposals/{proposalId} {
+      // Logged-in freelancers can create a proposal.
+      allow create: if request.auth != null;
+      // Only the client who posted the task can read the proposals.
+      // Checks if requester's UID matches the clientUid on the task document.
+      allow read: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid;
     }
   }
 }

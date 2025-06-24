@@ -13,6 +13,7 @@ const encodedKey = new TextEncoder().encode(secretKey);
 const aDayInSeconds = 24 * 60 * 60;
 
 export type UserPayload = {
+  uid: string; // This is the user's document ID in Firestore
   name: string;
   email: string;
   role: 'freelancer' | 'client';
@@ -23,6 +24,7 @@ export async function createSession(payload: UserPayload) {
   const expiresAt = new Date(Date.now() + aDayInSeconds * 1000);
   const session = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
+    .setSubject(payload.uid) // This sets the 'sub' claim, which Firebase Auth uses as uid
     .setExpirationTime('1d')
     .setIssuedAt()
     .sign(encodedKey);

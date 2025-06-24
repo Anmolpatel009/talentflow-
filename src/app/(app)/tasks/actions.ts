@@ -49,7 +49,7 @@ export async function createTask(
   }
 
   const session = await getSession();
-  if (!session?.email) {
+  if (!session?.uid || !session?.email) {
     return {
       message: 'You must be logged in to post a task.',
       success: false,
@@ -59,6 +59,7 @@ export async function createTask(
   try {
     await createTaskForClient({
       clientId: session.email,
+      clientUid: session.uid,
       title: validatedFields.data.title,
       description: validatedFields.data.description,
       category: validatedFields.data.category,

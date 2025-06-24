@@ -7,6 +7,7 @@ import type { User } from './users';
 export type Task = {
   id: string;
   clientId: string; // Corresponds to user's email for this prototype
+  clientUid: string; // Corresponds to user's document ID in Firestore
   title: string;
   description: string;
   category: string;
