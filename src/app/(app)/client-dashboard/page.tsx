@@ -93,7 +93,7 @@ export default async function ClientDashboardPage() {
                   <TableCell className="text-center">{task.proposals}</TableCell>
                   <TableCell>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/tasks/${task.id}`}>Manage Task</Link>
+                      <Link href={`/tasks/${task.id}/proposals`}>View Proposals</Link>
                     </Button>
                   </TableCell>
                 </TableRow>

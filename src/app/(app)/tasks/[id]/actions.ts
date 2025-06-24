@@ -22,14 +22,15 @@ export async function applyForTask(prevState: State, formData: FormData): Promis
     }
 
     try {
-        await applyToTaskInDb(taskId);
+        await applyToTaskInDb(taskId, session.email);
         revalidatePath('/client-dashboard');
         revalidatePath(`/tasks/${taskId}`);
+        revalidatePath(`/tasks/${taskId}/proposals`);
         revalidatePath('/freelancer-dashboard');
         revalidatePath('/tasks');
         return { success: true, message: "Successfully applied for the task!" };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to apply for task:", error);
-        return { success: false, message: "There was an error applying for the task." };
+        return { success: false, message: error.message || "There was an error applying for the task." };
     }
 }

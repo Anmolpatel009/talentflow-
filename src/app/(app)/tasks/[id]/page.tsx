@@ -6,6 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { DollarSign, Briefcase, Star, FileText } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { ApplyButton } from "./ApplyButton";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
     const task = await getTaskById(params.id);
@@ -60,7 +62,9 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
                        <ApplyButton taskId={task.id} />
                     )}
                      {isClientOwner && (
-                        <p className="text-sm text-muted-foreground">You are the owner of this task.</p>
+                        <Button asChild>
+                            <Link href={`/tasks/${task.id}/proposals`}>View Proposals ({task.proposals})</Link>
+                        </Button>
                     )}
                 </CardFooter>
             </Card>

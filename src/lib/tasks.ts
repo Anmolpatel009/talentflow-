@@ -1,7 +1,7 @@
 // This file manages tasks using Firestore.
 import "server-only";
 import { db } from './firebase';
-import { collection, query, where, getDocs, addDoc, getDoc, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, getDoc, doc, updateDoc, increment, runTransaction } from 'firebase/firestore';
 import type { User } from './users';
 
 export type Task = {
@@ -134,12 +134,66 @@ export async function getTaskById(id: string): Promise<TaskWithUser | null> {
 }
 
 /**
- * Increments the proposal count for a specific task.
+ * Records a freelancer's application for a specific task.
  * @param taskId The ID of the task to update.
+ * @param freelancerId The ID (email) of the applying freelancer.
  */
-export async function applyToTask(taskId: string) {
+export async function applyToTask(taskId: string, freelancerId: string) {
     const taskDocRef = doc(db, 'tasks', taskId);
-    await updateDoc(taskDocRef, {
-        proposals: increment(1)
+    const proposalCollectionRef = collection(taskDocRef, 'proposals');
+    const proposalDocRef = doc(proposalCollectionRef, freelancerId); // Use freelancerId as doc ID to prevent duplicates
+
+    // Use a transaction to ensure atomicity
+    await runTransaction(db, async (transaction) => {
+        const taskDoc = await transaction.get(taskDocRef);
+        if (!taskDoc.exists()) {
+            throw new Error("Task does not exist!");
+        }
+
+        const proposalDoc = await transaction.get(proposalDocRef);
+        if (proposalDoc.exists()) {
+            throw new Error("You have already applied for this task.");
+        }
+
+        // Add the proposal document
+        transaction.set(proposalDocRef, {
+            freelancerId: freelancerId,
+            appliedAt: new Date(),
+        });
+
+        // Increment the proposal count on the main task document
+        transaction.update(taskDocRef, {
+            proposals: increment(1)
+        });
     });
+}
+
+/**
+ * Retrieves all freelancers who have applied for a task.
+ * @param taskId The ID of the task.
+ * @returns A promise that resolves to an array of User objects for each applicant.
+ */
+export async function getProposalsForTask(taskId: string): Promise<User[]> {
+    const proposalsCollectionRef = collection(db, 'tasks', taskId, 'proposals');
+    const proposalsSnapshot = await getDocs(proposalsCollectionRef);
+
+    if (proposalsSnapshot.empty) {
+        return [];
+    }
+
+    const freelancerIds = proposalsSnapshot.docs.map(doc => doc.data().freelancerId as string);
+    
+    if (freelancerIds.length === 0) {
+        return [];
+    }
+
+    // This can be inefficient for many proposals. Firestore recommends limiting 'in' queries to 10-30 items.
+    // For a production app with many proposals, a different data model or cloud functions might be better.
+    const usersQuery = query(collection(db, 'users'), where('email', 'in', freelancerIds));
+    const usersSnapshot = await getDocs(usersQuery);
+
+    return usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    })) as User[];
 }
