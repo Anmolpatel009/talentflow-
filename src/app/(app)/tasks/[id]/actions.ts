@@ -31,6 +31,17 @@ export async function applyForTask(prevState: State, formData: FormData): Promis
         return { success: true, message: "Successfully applied for the task!" };
     } catch (error: any) {
         console.error("Failed to apply for task:", error);
-        return { success: false, message: error.message || "There was an error applying for the task." };
+        
+        if (error.message?.includes("PERMISSION_DENIED")) {
+            return { success: false, message: "Permission denied. Please try again." };
+        }
+        if (error.message?.includes("already applied")) {
+            return { success: false, message: error.message };
+        }
+        if (error.message?.includes("Task does not exist")) {
+            return { success: false, message: "This task no longer exists." };
+        }
+
+        return { success: false, message: "An unexpected server error occurred while applying." };
     }
 }
