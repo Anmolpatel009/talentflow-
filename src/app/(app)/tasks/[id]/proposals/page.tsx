@@ -20,7 +20,7 @@ export default async function TaskProposalsPage({ params }: { params: { id: stri
     }
 
     // Security check: only the task owner can see this page
-    if (task.clientId !== session.email) {
+    if (task.clientUid !== session.uid) {
         return (
             <div className="text-center">
                 <h1 className="text-2xl font-bold">Permission Denied</h1>

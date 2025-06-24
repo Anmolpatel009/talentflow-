@@ -22,7 +22,7 @@ export async function applyForTask(prevState: State, formData: FormData): Promis
     }
 
     try {
-        await applyToTaskInDb(taskId, session.email);
+        await applyToTaskInDb(taskId, session.uid, session.email);
         revalidatePath('/client-dashboard');
         revalidatePath(`/tasks/${taskId}`);
         revalidatePath(`/tasks/${taskId}/proposals`);

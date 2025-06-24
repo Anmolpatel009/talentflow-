@@ -137,12 +137,13 @@ export async function getTaskById(id: string): Promise<TaskWithUser | null> {
 /**
  * Records a freelancer's application for a specific task.
  * @param taskId The ID of the task to update.
- * @param freelancerId The ID (email) of the applying freelancer.
+ * @param freelancerUid The unique ID of the applying freelancer.
+ * @param freelancerEmail The email of the applying freelancer.
  */
-export async function applyToTask(taskId: string, freelancerId: string) {
+export async function applyToTask(taskId: string, freelancerUid: string, freelancerEmail: string) {
     const taskDocRef = doc(db, 'tasks', taskId);
     const proposalCollectionRef = collection(taskDocRef, 'proposals');
-    const proposalDocRef = doc(proposalCollectionRef, freelancerId); // Use freelancerId as doc ID to prevent duplicates
+    const proposalDocRef = doc(proposalCollectionRef, freelancerUid); // Use freelancerUid as doc ID to prevent duplicates
 
     // Use a transaction to ensure atomicity
     await runTransaction(db, async (transaction) => {
@@ -158,7 +159,8 @@ export async function applyToTask(taskId: string, freelancerId: string) {
 
         // Add the proposal document
         transaction.set(proposalDocRef, {
-            freelancerId: freelancerId,
+            freelancerUid: freelancerUid,
+            freelancerEmail: freelancerEmail,
             appliedAt: new Date(),
         });
 
@@ -182,15 +184,15 @@ export async function getProposalsForTask(taskId: string): Promise<User[]> {
         return [];
     }
 
-    const freelancerIds = proposalsSnapshot.docs.map(doc => doc.data().freelancerId as string);
+    const freelancerEmails = proposalsSnapshot.docs.map(doc => doc.data().freelancerEmail as string);
     
-    if (freelancerIds.length === 0) {
+    if (freelancerEmails.length === 0) {
         return [];
     }
 
     // This can be inefficient for many proposals. Firestore recommends limiting 'in' queries to 10-30 items.
     // For a production app with many proposals, a different data model or cloud functions might be better.
-    const usersQuery = query(collection(db, 'users'), where('email', 'in', freelancerIds));
+    const usersQuery = query(collection(db, 'users'), where('email', 'in', freelancerEmails));
     const usersSnapshot = await getDocs(usersQuery);
 
     return usersSnapshot.docs.map(doc => ({

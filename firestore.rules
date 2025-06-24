@@ -3,27 +3,45 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can be created by anyone (for signup)
-    // Users can be read by anyone (for freelancer profiles)
-    match /users/{userId} {
-      allow read, create: if true;
-      // Allow users to update their own profile. Checks if the requester's UID matches the document ID.
-      allow update: if request.auth != null && request.auth.uid == userId;
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Tasks can be read by anyone
-    // Tasks can only be created by logged-in users
+    // Helper function to check if the user is the owner of a document by their UID
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Users can be read by anyone.
+    // Users can create their own profile (signup).
+    // Users can only update their own profile.
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if true; 
+      allow update: if isOwner(userId);
+    }
+    
+    // Tasks can be read by anyone.
+    // Tasks can only be created by logged-in users.
+    // Tasks can only be updated/deleted by the client who created them.
     match /tasks/{taskId} {
       allow read: if true;
-      allow create: if request.auth != null;
-    }
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(resource.data.clientUid);
 
-    match /tasks/{taskId}/proposals/{proposalId} {
-      // Logged-in freelancers can create a proposal.
-      allow create: if request.auth != null;
-      // Only the client who posted the task can read the proposals.
-      // Checks if requester's UID matches the clientUid on the task document.
-      allow read: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid;
+      // Proposals subcollection
+      match /proposals/{proposalId} { // proposalId is now the freelancer's uid
+        // Allow create if the user is authenticated AND they are creating their own proposal document
+        allow create: if isAuthenticated() && request.auth.uid == proposalId;
+        
+        // Allow a freelancer to read their own proposal (to check if they've applied)
+        // Allow the task owner to read all proposals
+        allow read: if (isAuthenticated() && request.auth.uid == proposalId) || isOwner(get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid);
+        
+        // Allow the task owner to list all proposals
+        allow list: if isOwner(get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid);
+      }
     }
   }
 }
