@@ -32,8 +32,9 @@ export async function applyForTask(prevState: State, formData: FormData): Promis
     } catch (error: any) {
         console.error("Failed to apply for task:", error);
         
-        if (error.message?.includes("PERMISSION_DENIED")) {
-            return { success: false, message: "Permission denied. Please try again." };
+        // Check for specific Firebase error codes for more reliable handling.
+        if (error.code === 'permission-denied') {
+            return { success: false, message: "Permission denied. Please check security rules and authentication status." };
         }
         if (error.message?.includes("already applied")) {
             return { success: false, message: error.message };
