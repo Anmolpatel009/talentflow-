@@ -3,51 +3,44 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if a user is authenticated
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Helper function to check if the user is the owner of a document
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Users can create their own profile, but only update their own.
-    // Public can view profiles.
+    // Allow public read access to users and tasks.
+    // Writes are restricted.
     match /users/{userId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isOwner(userId);
+      allow read;
+      // Anyone can create a user document (signup).
+      allow create;
+      // Only the authenticated user can update their own document.
+      allow update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Tasks can be read by anyone.
-    // Only signed-in users can create tasks.
-    // Only the task owner can update the task details, except for the proposal count.
     match /tasks/{taskId} {
-      allow read: if true;
-      allow create: if isSignedIn();
+      allow read;
       
-      // Allow an update if the user is the owner OR if they are only incrementing the proposal count by 1
-      allow update: if isOwner(resource.data.clientUid) || 
-                      (
-                        isSignedIn() &&
-                        request.resource.data.proposals == resource.data.proposals + 1 &&
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proposals'])
-                      );
+      // Allow task creation only for authenticated users where the UID matches.
+      allow create: if request.auth != null && request.resource.data.clientUid == request.auth.uid;
+      
+      // Allow the task owner to update any part of the task.
+      // Allow any authenticated user to ONLY increment the proposals counter.
+      allow update: if request.auth != null && (
+        (resource.data.clientUid == request.auth.uid) ||
+        (
+          request.resource.data.proposals == resource.data.proposals + 1 &&
+          // Ensure ONLY the proposals field is being changed.
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proposals'])
+        )
+      );
     }
     
-    // Proposals are subcollections of tasks.
-    match /tasks/{taskId}/proposals/{proposalId} {
-      // Only the task owner can list all proposals.
-      allow list: if get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid == request.auth.uid;
+    // Proposals subcollection rules
+    match /tasks/{taskId}/proposals/{freelancerUid} {
+      // Allow a freelancer to create their own proposal document.
+      allow create: if request.auth != null && request.auth.uid == freelancerUid;
       
-      // An authenticated user can create their own proposal using their UID as the document ID.
-      allow create: if isSignedIn() && request.auth.uid == proposalId;
-      
-      // A freelancer can see their own proposal, and the client can see all of them.
-      allow get: if (isSignedIn() && request.auth.uid == proposalId) || 
-                   (get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid == request.auth.uid);
+      // Allow a freelancer to check if they have already applied.
+      allow get: if request.auth != null && request.auth.uid == freelancerUid;
+
+      // Allow the client who owns the task to list all proposals.
+      allow list: if request.auth != null && get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid == request.auth.uid;
     }
   }
 }
