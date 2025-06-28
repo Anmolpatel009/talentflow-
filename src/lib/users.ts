@@ -35,11 +35,11 @@ export async function createUser(data: Omit<User, 'id' | 'passwordHash' | 'avata
   const newUserPayload = {
     ...data,
     email: data.email.toLowerCase(),
-    passwordHash: `hashed_${data.password}`, // In a real app, use Firebase Auth instead of storing passwords.
+    // This is not secure. In a real app, use Firebase Authentication.
+    passwordHash: `hashed_${data.password}`,
     avatar: 'https://placehold.co/100x100.png',
     hint: 'person portrait',
     distance: `${(Math.random() * 5).toFixed(1)} km`, // Mock distance
-    skill: data.skills[0] || 'Specialist',
   };
   // The password should not be stored in the document.
   delete (newUserPayload as any).password;
