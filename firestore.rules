@@ -1,60 +1,38 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // These rules are configured for an application using a custom authentication system
-    // that does not integrate with Firebase Authentication. As a result, the `request.auth`
-    // variable is always null. These rules allow the app to function but are less secure
-    // than rules that can verify a user's identity via `request.auth.uid`.
-    // In a production environment, migrating to Firebase Authentication is recommended.
-
-    // Users Collection
-    match /users/{userId} {
-      // Anyone can create a user account (e.g., during signup).
-      allow create: if true;
-      
-      // Anyone can read any user's public profile data.
-      allow read: if true;
-      
-      // Any client can update any user document. This is insecure but necessary for the
-      // prototype to function without Firebase Auth. A real app would restrict this
-      // to the authenticated user: `allow update: if request.auth.uid == userId;`
-      allow update: if true;
-      
-      // Deleting users is not permitted from the client.
-      allow delete: if false;
+    
+    // Helper function to check if a user is authenticated via our custom JWT
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
     }
 
-    // Tasks Collection
-    match /tasks/{taskId} {
-      // Anyone can read task details.
+    // Allow anyone to read any document in the database.
+    // This simplifies displaying profiles, tasks, etc., during development.
+    match /{document=**} {
       allow read: if true;
-      
-      // Any client can create a new task. In a real app, you would verify
-      // that the `clientUid` in the task data matches `request.auth.uid`.
+    }
+
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Anyone can create a user account (for signing up).
       allow create: if true;
       
-      // Any client can update any task. The `applyToTask` function relies on this
-      // to increment the proposal counter. This is insecure. A real app would use
-      // more granular rules.
-      allow update: if true;
-      
-      // Deleting tasks is not permitted from the client.
-      allow delete: if false;
+      // Only the authenticated owner of the document can update or delete it.
+      allow update, delete: if isAuthenticated() && request.auth.uid == userId;
+    }
 
-      // Proposals Subcollection
-      match /proposals/{freelancerUid} {
-        // Any client can create a proposal for any user. Insecure, but required for apply flow.
-        allow create: if true;
-        
-        // Any client can read any proposal. This is required for the client to see
-        // who applied, and for the freelancer to check if they have applied. This is
-        // a significant security trade-off.
-        allow read: if true;
+    // Rules for the 'tasks' collection and its subcollections
+    match /tasks/{taskId} {
+      // Any authenticated user can create, update, or delete tasks.
+      // This is permissive for development and solves the "permission denied" error.
+      // We can tighten this later to be owner-only.
+      allow write: if isAuthenticated();
 
-        // Updating or deleting proposals is not permitted from the client.
-        allow update, delete: if false;
+      // Rules for the 'proposals' subcollection
+      match /proposals/{proposalId} {
+        // Any authenticated user can create a proposal.
+        allow write: if isAuthenticated();
       }
     }
   }
