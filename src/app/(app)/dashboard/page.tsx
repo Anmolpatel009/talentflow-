@@ -7,7 +7,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-headline font-bold">Welcome to NearTask</h1>
+        <h1 className="text-4xl font-headline font-bold">Welcome to Localance</h1>
         <p className="text-muted-foreground mt-2 text-lg">
           Please choose your path to get started.
         </p>

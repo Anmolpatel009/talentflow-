@@ -49,7 +49,7 @@ export default function SignupPage() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Create an Account</CardTitle>
-        <CardDescription>Join NearTask to find work or hire talent locally.</CardDescription>
+        <CardDescription>Join Localance to find work or hire talent locally.</CardDescription>
       </CardHeader>
       <form action={formAction}>
         <CardContent className="space-y-4">
@@ -74,7 +74,7 @@ export default function SignupPage() {
              {state?.errors?.location && <p className="text-sm text-destructive">{state.errors.location.join(", ")}</p>}
           </div>
           <div className="space-y-3">
-             <Label>How will you use NearTask?</Label>
+             <Label>How will you use Localance?</Label>
               {state?.errors?.roles && <p className="text-sm text-destructive">{state.errors.roles.join(", ")}</p>}
              <RadioGroup name="roles" defaultValue="freelancer" className="grid grid-cols-2 gap-4">
                 <div>
