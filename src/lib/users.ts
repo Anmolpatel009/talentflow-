@@ -1,7 +1,7 @@
 // src/lib/users.ts
 import 'server-only';
 import { db } from './firebase';
-import { collection, query, where, getDocs, addDoc, doc, getDoc, getCountFromServer } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc, getCountFromServer, limit } from 'firebase/firestore';
 
 export type User = {
   id: string;
@@ -10,6 +10,8 @@ export type User = {
   passwordHash: string; // In a real app, use Firebase Auth instead of storing hashes
   role: 'freelancer' | 'client';
   location: string;
+  latitude?: number;
+  longitude?: number;
   skills: string[];
   skill: string; // Primary skill
   avatar: string;
@@ -65,6 +67,23 @@ export async function getFreelancers(): Promise<User[]> {
       ...doc.data()
   })) as User[];
 }
+
+export async function getTopFreelancers(): Promise<User[]> {
+  // In a real app, this would query based on ratings, tasks completed, etc.
+  // For now, we'll just get the first 4 freelancers as a demonstration.
+  const q = query(usersCollection, where("role", "==", "freelancer"), limit(4));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    return [];
+  }
+  
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as User[];
+}
+
 
 export async function getFreelancerCount(): Promise<number> {
     const q = query(usersCollection, where("role", "==", "freelancer"));

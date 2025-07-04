@@ -1,76 +1,80 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
+"use client";
 
-interface Freelancer {
-  id: string;
-  latitude: number;
-  longitude: number;
-  // Add any other freelancer properties you need
-}
+import React, { useMemo } from 'react';
+import { GoogleMap, useLoadScript, MarkerF } from '@react-google-maps/api';
+import type { User } from '@/lib/users';
+import { Skeleton } from '../ui/skeleton';
 
 interface FreelancerMapProps {
-  freelancers: Freelancer[];
+  freelancers: User[];
 }
 
-const containerStyle = {
+const mapContainerStyle = {
   width: '100%',
-  height: '500px'
+  height: '100%',
+  borderRadius: 'var(--radius)',
 };
 
 const defaultCenter = {
-  lat: 40.7128, // Example: New York City latitude
-  lng: -74.0060 // Example: New York City longitude
+  lat: 37.7749, // Default: San Francisco
+  lng: -122.4194,
 };
 
 const libraries: ('places' | 'drawing' | 'geometry')[] = ['places'];
 
-const FreelancerMap: React.FC<FreelancerMapProps> = ({ freelancers }) => {
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-
+export function FreelancerMap({ freelancers }: FreelancerMapProps) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string, // Use environment variable for API key
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
     libraries,
   });
 
-  const onLoad = (mapInstance: google.maps.Map) => {
-    setMap(mapInstance);
-  };
+  const mapCenter = useMemo(() => {
+    if (freelancers.length > 0) {
+      const totalLat = freelancers.reduce((sum, f) => sum + (f.latitude ?? defaultCenter.lat), 0);
+      const totalLng = freelancers.reduce((sum, f) => sum + (f.longitude ?? defaultCenter.lng), 0);
+      return {
+        lat: totalLat / freelancers.length,
+        lng: totalLng / freelancers.length
+      };
+    }
+    return defaultCenter;
+  }, [freelancers]);
 
-  const onUnmount = () => {
-    setMap(null);
-  };
-
-  const renderMap = useMemo(() => {
-    if (loadError) return <div>Error loading maps</div>;
-    if (!isLoaded) return <div>Loading Maps...</div>;
-
+  if (loadError) {
     return (
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={defaultCenter}
-        zoom={10}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-      >
-        {freelancers.map(freelancer => (
-          <Marker
+      <div className="w-full h-full flex items-center justify-center bg-destructive/10 text-destructive">
+        Error loading maps. Please check the API key.
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return <Skeleton className="w-full h-full" />;
+  }
+
+  return (
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={mapCenter}
+      zoom={12}
+      options={{
+        streetViewControl: false,
+        mapTypeControl: false,
+        fullscreenControl: false,
+      }}
+    >
+      {freelancers.map(freelancer =>
+        freelancer.latitude && freelancer.longitude ? (
+          <MarkerF
             key={freelancer.id}
             position={{
               lat: freelancer.latitude,
-              lng: freelancer.longitude
+              lng: freelancer.longitude,
             }}
-            // You can customize marker icon here if needed
+            title={freelancer.name}
           />
-        ))}
-      </GoogleMap>
-    );
-  }, [isLoaded, loadError, freelancers]); // Re-render map when these dependencies change
-
-  return (
-    <div className="freelancer-map-container">
-      {renderMap}
-    </div>
+        ) : null
+      )}
+    </GoogleMap>
   );
-};
-
-export default FreelancerMap;
+}

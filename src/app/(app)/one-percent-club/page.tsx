@@ -1,16 +1,12 @@
 import { OnePercentClubClient } from "@/components/pages/OnePercentClubClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTopFreelancers } from "@/lib/users";
 import { Award } from "lucide-react";
 
-const topFreelancers = [
-  { name: 'Aria Montgomery', skill: 'Lead UI/UX Designer', avatar: 'https://placehold.co/100x100.png', hint: 'woman portrait' },
-  { name: 'Ken Adams', skill: 'Senior Go Developer', avatar: 'https://placehold.co/100x100.png', hint: 'man portrait' },
-  { name: 'Lia Sharma', skill: 'Cloud Architect (AWS)', avatar: 'https://placehold.co/100x100.png', hint: 'woman smiling' },
-  { name: 'David Chen', skill: 'Data Scientist', avatar: 'https://placehold.co/100x100.png', hint: 'man glasses' },
-];
+export default async function OnePercentClubPage() {
+  const topFreelancers = await getTopFreelancers();
 
-export default function OnePercentClubPage() {
   return (
     <div className="space-y-8">
       <div>
@@ -46,7 +42,7 @@ export default function OnePercentClubPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {topFreelancers.map((freelancer) => (
-                <div key={freelancer.name} className="text-center space-y-2">
+                <div key={freelancer.id} className="text-center space-y-2">
                   <Avatar className="h-24 w-24 mx-auto border-4 border-accent">
                     <AvatarImage src={freelancer.avatar} data-ai-hint={freelancer.hint}/>
                     <AvatarFallback>{freelancer.name.substring(0,2)}</AvatarFallback>
@@ -55,6 +51,11 @@ export default function OnePercentClubPage() {
                   <p className="text-xs text-muted-foreground">{freelancer.skill}</p>
                 </div>
               ))}
+              {topFreelancers.length === 0 && (
+                <p className="col-span-full text-center text-muted-foreground py-8">
+                  No members have joined the 1% Club yet. Be the first to qualify!
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

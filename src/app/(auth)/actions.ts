@@ -64,6 +64,12 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
   // A real app would have more complex skill acquisition. For now, mock it.
   const skills = roles === 'freelancer' ? ['New Skill', 'Ready to learn'] : [];
   const primarySkill = skills[0] || ''; // Assuming the first skill is the primary
+
+  // Mock coordinates around a central point (e.g., San Francisco) for demonstration
+  const baseLat = 37.7749;
+  const baseLng = -122.4194;
+  const latitude = baseLat + (Math.random() - 0.5) * 0.2; // Approx +/- 11 km
+  const longitude = baseLng + (Math.random() - 0.5) * 0.2;
   
   try {
     const newUser = new User({
@@ -75,6 +81,8 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
     role: roles,
     skills,
     skill: skills[0] || '',
+    latitude,
+    longitude,
   });
 
     const user = await newUser.save(); // Save the new user to MongoDB

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { getFreelancers } from "@/lib/users";
 import { MapPin, MessageSquare } from "lucide-react";
+import { FreelancerMap } from "@/components/pages/FreelancerMap";
 
 export default async function FindFreelancersPage() {
   const freelancers = await getFreelancers();
@@ -14,6 +15,12 @@ export default async function FindFreelancersPage() {
         <h1 className="text-3xl font-headline font-bold">Find Freelancers Nearby</h1>
         <p className="text-muted-foreground">Discover talented professionals in your local area.</p>
       </div>
+
+      <Card>
+        <CardContent className="p-0 h-[400px] md:h-[500px]">
+          <FreelancerMap freelancers={freelancers} />
+        </CardContent>
+      </Card>
 
       {freelancers.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
