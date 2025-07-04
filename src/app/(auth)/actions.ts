@@ -4,8 +4,7 @@
 import { z } from "zod";
 import { redirect } from 'next/navigation'
 import { createSession, deleteSession } from "@/lib/session";
-import connectToDatabase from "@/lib/mongoose";
-import User from "@/models/User";
+import { createUser, findUserByEmail } from "@/lib/users";
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -30,14 +29,13 @@ type AuthState = {
     password?: string[];
     location?: string[];
     roles?: string[];
+    _form?: string[];
   } | null,
   success?: boolean;
   role?: 'freelancer' | 'client';
 } | null;
 
 export async function signup(prevState: AuthState, formData: FormData): Promise<AuthState> {
-  await connectToDatabase(); // Ensure connection is established
-
   const validatedFields = signupSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -50,66 +48,56 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
 
   const { name, email, password, location, roles } = validatedFields.data;
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return {
-        message: "A user with this email already exists.",
-        success: false,
-    }
-  }
-  
-  // In a real app, hash the password before storing it
-  const passwordHash = `hashed_${password}`; // Replace with actual secure hashing
-  
-  // A real app would have more complex skill acquisition. For now, mock it.
-  const skills = roles === 'freelancer' ? ['New Skill', 'Ready to learn'] : [];
-  const primarySkill = skills[0] || ''; // Assuming the first skill is the primary
-
-  // Mock coordinates around a central point (e.g., San Francisco) for demonstration
-  const baseLat = 37.7749;
-  const baseLng = -122.4194;
-  const latitude = baseLat + (Math.random() - 0.5) * 0.2; // Approx +/- 11 km
-  const longitude = baseLng + (Math.random() - 0.5) * 0.2;
-  
   try {
-    const newUser = new User({
-    name,
-    email,
-    passwordHash,
-    password,
-    location,
-    role: roles,
-    skills,
-    skill: skills[0] || '',
-    latitude,
-    longitude,
-  });
-
-    const user = await newUser.save(); // Save the new user to MongoDB
-
-  await createSession({
-    uid: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    location: user.location,
-    });
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return {
+          message: "A user with this email already exists.",
+          success: false,
+      }
+    }
     
+    // A real app would have more complex skill acquisition. For now, mock it.
+    const skills = roles === 'freelancer' ? ['New Skill', 'Ready to learn'] : [];
+    const primarySkill = skills[0] || '';
+
+    // Mock coordinates around a central point (e.g., San Francisco) for demonstration
+    const baseLat = 37.7749;
+    const baseLng = -122.4194;
+    const latitude = baseLat + (Math.random() - 0.5) * 0.2; // Approx +/- 11 km
+    const longitude = baseLng + (Math.random() - 0.5) * 0.2;
+    
+    const user = await createUser({
+      name,
+      email,
+      password,
+      location,
+      role: roles,
+      skills,
+      skill: primarySkill,
+      latitude,
+      longitude,
+    });
+
+    await createSession({
+      uid: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      location: user.location,
+    });
+      
     return { success: true, message: "Signup successful!", role: user.role };
   } catch (error: any) {
-      console.error('Error creating user:', error);
-      // Handle specific Mongoose validation or duplicate errors if needed
-      if (error.code === 11000) { // Duplicate key error
-          return { errors: { email: ['Email already exists.'] }, message: "A user with this email already exists.", success: false };
-      }
-      return { errors: { _form: ['An error occurred during signup.'] }, message: "An error occurred during signup.", success: false };
+    console.error('Error creating user:', error);
+    if (error.code?.includes('permission-denied')) {
+        return { message: "Database permission denied. Please check your Firestore security rules.", success: false };
+    }
+    return { message: 'An unexpected server error occurred during signup.', success: false };
   }
-
 }
 
 export async function login(prevState: AuthState, formData: FormData): Promise<AuthState> {
-  await connectToDatabase(); // Ensure connection is established
-
   const validatedFields = loginSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -122,27 +110,35 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
 
   const { email, password } = validatedFields.data;
 
-  const user = await User.findOne({ email });
+  try {
+    const user = await findUserByEmail(email);
 
-  // In a production app, you would compare hashed passwords.
-  // For this prototype, we'll do a simple string comparison.
-  // The stored "hash" is just `hashed_${password}`.
-  if (!user || user.passwordHash !== `hashed_${password}`) {
-    return {
-      message: 'Invalid email or password.',
-      success: false,
-    };
+    // In a production app, you would compare hashed passwords.
+    // For this prototype, we'll do a simple string comparison.
+    // The stored "hash" is just `hashed_${password}`.
+    if (!user || user.passwordHash !== `hashed_${password}`) {
+      return {
+        message: 'Invalid email or password.',
+        success: false,
+      };
+    }
+
+    await createSession({
+      uid: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      location: user.location,
+    });
+
+    return { success: true, message: "Login successful!", role: user.role };
+  } catch(error: any) {
+    console.error('Login error:', error);
+    if (error.code?.includes('permission-denied')) {
+        return { message: "Database permission denied. Please check your Firestore security rules.", success: false };
+    }
+    return { message: 'An unexpected server error occurred during login.', success: false };
   }
-
-  await createSession({
-    uid: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    location: user.location,
-  });
-
-  return { success: true, message: "Login successful!", role: user.role };
 }
 
 export async function logout() {
