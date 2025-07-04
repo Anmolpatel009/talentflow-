@@ -2,45 +2,60 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Allow public read access to users and tasks.
-    // Writes are restricted.
+
+    // These rules are configured for an application using a custom authentication system
+    // that does not integrate with Firebase Authentication. As a result, the `request.auth`
+    // variable is always null. These rules allow the app to function but are less secure
+    // than rules that can verify a user's identity via `request.auth.uid`.
+    // In a production environment, migrating to Firebase Authentication is recommended.
+
+    // Users Collection
     match /users/{userId} {
-      allow read;
-      // Anyone can create a user document (signup).
-      allow create;
-      // Only the authenticated user can update their own document.
-      allow update: if request.auth != null && request.auth.uid == userId;
+      // Anyone can create a user account (e.g., during signup).
+      allow create: if true;
+      
+      // Anyone can read any user's public profile data.
+      allow read: if true;
+      
+      // Any client can update any user document. This is insecure but necessary for the
+      // prototype to function without Firebase Auth. A real app would restrict this
+      // to the authenticated user: `allow update: if request.auth.uid == userId;`
+      allow update: if true;
+      
+      // Deleting users is not permitted from the client.
+      allow delete: if false;
     }
 
+    // Tasks Collection
     match /tasks/{taskId} {
-      allow read;
+      // Anyone can read task details.
+      allow read: if true;
       
-      // Allow task creation only for authenticated users where the UID matches.
-      allow create: if request.auth != null && request.resource.data.clientUid == request.auth.uid;
+      // Any client can create a new task. In a real app, you would verify
+      // that the `clientUid` in the task data matches `request.auth.uid`.
+      allow create: if true;
       
-      // Allow the task owner to update any part of the task.
-      // Allow any authenticated user to ONLY increment the proposals counter.
-      allow update: if request.auth != null && (
-        (resource.data.clientUid == request.auth.uid) ||
-        (
-          request.resource.data.proposals == resource.data.proposals + 1 &&
-          // Ensure ONLY the proposals field is being changed.
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proposals'])
-        )
-      );
-    }
-    
-    // Proposals subcollection rules
-    match /tasks/{taskId}/proposals/{freelancerUid} {
-      // Allow a freelancer to create their own proposal document.
-      allow create: if request.auth != null && request.auth.uid == freelancerUid;
+      // Any client can update any task. The `applyToTask` function relies on this
+      // to increment the proposal counter. This is insecure. A real app would use
+      // more granular rules.
+      allow update: if true;
       
-      // Allow a freelancer to check if they have already applied.
-      allow get: if request.auth != null && request.auth.uid == freelancerUid;
+      // Deleting tasks is not permitted from the client.
+      allow delete: if false;
 
-      // Allow the client who owns the task to list all proposals.
-      allow list: if request.auth != null && get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid == request.auth.uid;
+      // Proposals Subcollection
+      match /proposals/{freelancerUid} {
+        // Any client can create a proposal for any user. Insecure, but required for apply flow.
+        allow create: if true;
+        
+        // Any client can read any proposal. This is required for the client to see
+        // who applied, and for the freelancer to check if they have applied. This is
+        // a significant security trade-off.
+        allow read: if true;
+
+        // Updating or deleting proposals is not permitted from the client.
+        allow update, delete: if false;
+      }
     }
   }
 }
