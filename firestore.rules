@@ -1,38 +1,42 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if a user is authenticated via our custom JWT
-    function isAuthenticated() {
-      return request.auth != null && request.auth.uid != null;
-    }
 
-    // Allow anyone to read any document in the database.
-    // This simplifies displaying profiles, tasks, etc., during development.
-    match /{document=**} {
-      allow read: if true;
-    }
-
-    // Rules for the 'users' collection
+    // Users can be read by anyone (for profiles), but only the user can write.
     match /users/{userId} {
-      // Anyone can create a user account (for signing up).
-      allow create: if true;
-      
-      // Only the authenticated owner of the document can update or delete it.
-      allow update, delete: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if true;
+      allow write: if request.auth.uid == userId;
     }
 
-    // Rules for the 'tasks' collection and its subcollections
+    // Tasks can be read by anyone, created by any logged-in user,
+    // and deleted only by the owner.
     match /tasks/{taskId} {
-      // Any authenticated user can create, update, or delete tasks.
-      // This is permissive for development and solves the "permission denied" error.
-      // We can tighten this later to be owner-only.
-      allow write: if isAuthenticated();
+      allow read: if true;
+      allow create: if request.auth.uid != null;
+      allow delete: if resource.data.clientUid == request.auth.uid;
 
-      // Rules for the 'proposals' subcollection
-      match /proposals/{proposalId} {
-        // Any authenticated user can create a proposal.
-        allow write: if isAuthenticated();
+      // Update logic:
+      // 1. The owner of the task can update any field.
+      // 2. Any authenticated user can apply, which is a specific update that
+      //    only increments the 'proposals' count and changes no other fields.
+      allow update: if (resource.data.clientUid == request.auth.uid) ||
+                     (
+                       request.auth.uid != null &&
+                       request.resource.data.proposals == resource.data.proposals + 1 &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proposals'])
+                     );
+
+      // Proposals are a subcollection of tasks.
+      match /proposals/{freelancerId} {
+        // A freelancer can read their own proposal.
+        // The client who owns the task can read all proposals for that task.
+        allow read: if request.auth.uid == freelancerId || get(/databases/$(database)/documents/tasks/$(taskId)).data.clientUid == request.auth.uid;
+        
+        // A freelancer can create their own proposal. They cannot edit or delete it after.
+        allow create: if request.auth.uid == freelancerId;
+        allow update, delete: if false; // Proposals are final once submitted.
       }
     }
   }
