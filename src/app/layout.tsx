@@ -1,15 +1,16 @@
+
 import type {Metadata} from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 import { cn } from '@/lib/utils';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
+const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-headline' });
 
 export const metadata: Metadata = {
-  title: 'Localance - Find Freelancers Nearby',
-  description: 'A location-based freelancing platform that connects task posters with nearby freelancers in real-time.',
+  title: 'Your Name - Software Engineer',
+  description: 'The personal portfolio of Your Name, a passionate software engineer specializing in web development.',
 };
 
 export default function RootLayout({
@@ -18,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="!scroll-smooth">
       <body className={cn("font-body antialiased", inter.variable, spaceGrotesk.variable)}>
         {children}
         <Toaster />
@@ -26,3 +27,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    

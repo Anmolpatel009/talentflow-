@@ -1,131 +1,200 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, MapPin, Sparkles, Users, Award, BrainCircuit } from "lucide-react";
-import Link from "next/link";
-import { Logo } from "@/components/logo";
-import connectToDatabase from '@/lib/mongoose'; // Import the connection function
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Github, Linkedin, Twitter, Mail, Code, Server, Database } from "lucide-react";
 import Image from "next/image";
 
-// Establish MongoDB connection when the page is accessed
-// Note: For a Next.js App Router, this is generally better placed in a server component,
-// API route, or a global setup file if you need the connection for server-side logic.
+const projects = [
+  {
+    title: "Project One",
+    description: "A brief description of this project, highlighting the key technologies and what I learned. This project solves a real-world problem by doing X, Y, and Z.",
+    tags: ["Next.js", "TypeScript", "Tailwind CSS", "Firebase"],
+    imageUrl: "https://picsum.photos/seed/1/600/400",
+    liveUrl: "#",
+    sourceUrl: "#",
+    imageHint: "code laptop"
+  },
+  {
+    title: "Project Two",
+    description: "This was a team project where I was responsible for the backend. We built a scalable API using Node.js and deployed it on AWS.",
+    tags: ["Node.js", "Express", "PostgreSQL", "AWS"],
+    imageUrl: "https://picsum.photos/seed/2/600/400",
+    liveUrl: "#",
+    sourceUrl: "#",
+    imageHint: "server database"
+  },
+  {
+    title: "Project Three",
+    description: "An exploration into machine learning. I built a model to predict stock prices based on historical data. It was a great learning experience in data science.",
+    tags: ["Python", "TensorFlow", "Pandas", "Scikit-learn"],
+    imageUrl: "https://picsum.photos/seed/3/600/400",
+    liveUrl: "#",
+    sourceUrl: "#",
+    imageHint: "data chart"
+  }
+];
 
-export default function Home() {
-  const features = [
-    {
-      icon: <MapPin className="w-8 h-8 text-primary" />,
-      title: "Location-Based Matching",
-      description: "Find tasks and freelancers right in your neighborhood. Get real-time alerts for jobs posted nearby.",
-    },
-    {
-      icon: <BrainCircuit className="w-8 h-8 text-primary" />,
-      title: "AI-Powered Verification",
-      description: "Our 1% Club uses AI-generated skill tests to verify freelancers, ensuring you hire only top-tier, proven talent.",
-    },
-    {
-      icon: <Award className="w-8 h-8 text-primary" />,
-      title: "The 1% Club",
-      description: "Join an exclusive circle of elite freelancers to unlock premium projects, higher rates, and a badge of honor.",
-    },
-    {
-      icon: <Users className="w-8 h-8 text-primary" />,
-      title: "Build Together",
-      description: "Have a great idea but need a team? Post it on our collaboration board and find co-founders to build the future.",
-    },
-  ];
+const skills = [
+  {
+    category: "Frontend",
+    icon: <Code className="w-8 h-8 text-primary" />,
+    technologies: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Redux"]
+  },
+  {
+    category: "Backend",
+    icon: <Server className="w-8 h-8 text-primary" />,
+    technologies: ["Node.js", "Python", "Express", "Firebase", "PostgreSQL"]
+  },
+  {
+    category: "DevOps & Tools",
+    icon: <Database className="w-8 h-8 text-primary" />,
+    technologies: ["Docker", "Git", "GitHub Actions", "Vercel", "AWS"]
+  }
+];
 
+export default function PortfolioPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <nav className="flex justify-between items-center">
-          <Logo />
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup">Sign Up</Link>
-            </Button>
-          </div>
+    <div className="bg-background text-foreground">
+      {/* Header */}
+      <header className="container mx-auto px-6 py-4 flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+        <h1 className="text-2xl font-bold font-headline">Your Name</h1>
+        <nav className="flex items-center gap-4">
+          <a href="#projects" className="hover:text-primary transition-colors">Projects</a>
+          <a href="#skills" className="hover:text-primary transition-colors">Skills</a>
+          <a href="#about" className="hover:text-primary transition-colors">About</a>
+          <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
         </nav>
       </header>
 
-      <main className="flex-grow">
-        <section className="relative text-center py-20 lg:py-32 overflow-hidden">
-          <div className="absolute inset-0">
-            <Image
-              src="https://placehold.co/1920x1080.png"
-              alt="A vibrant and collaborative workspace"
-              fill
-              className="object-cover"
-              data-ai-hint="collaboration business"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+      <main className="container mx-auto px-6">
+        {/* Hero Section */}
+        <section id="hero" className="text-center py-20 lg:py-32">
+          <Image
+            src="https://picsum.photos/seed/me/128/128"
+            alt="Your Name"
+            width={128}
+            height={128}
+            className="rounded-full mx-auto mb-6 border-4 border-primary shadow-lg"
+            data-ai-hint="man portrait"
+          />
+          <h2 className="font-headline text-4xl md:text-6xl font-bold">
+            Software Engineer & Web Developer
+          </h2>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+            I build elegant, responsive, and scalable web applications. Currently passionate about [Your Passion] and seeking new opportunities to create and learn.
+          </p>
+          <div className="mt-8 flex justify-center gap-4">
+            <Button size="lg" asChild>
+              <a href="#contact">Get in Touch</a>
+            </Button>
+            <Button size="lg" variant="secondary" asChild>
+              <a href="/resume.pdf" target="_blank">View Resume</a>
+            </Button>
           </div>
-          <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-            <Sparkles className="mx-auto h-12 w-12 text-accent" />
-            <h1 className="font-headline text-4xl md:text-6xl font-bold mt-4">
-              Your Local Freelance Marketplace
-            </h1>
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-              Connect with skilled freelancers in your area. Post a task and get it done today.
-            </p>
-            <div className="mt-8 flex justify-center gap-4">
-              <Button size="lg" asChild>
-                <Link href="/signup">Find Talent</Link>
-              </Button>
-              <Button size="lg" variant="secondary" asChild>
-                <Link href="/signup">Find Work</Link>
-              </Button>
-            </div>
+          <div className="mt-12 flex justify-center gap-6">
+            <a href="#" className="text-muted-foreground hover:text-primary"><Github /></a>
+            <a href="#" className="text-muted-foreground hover:text-primary"><Linkedin /></a>
+            <a href="#" className="text-muted-foreground hover:text-primary"><Twitter /></a>
           </div>
         </section>
 
-        <section id="features" className="py-20 lg:py-24 bg-card">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="font-headline text-3xl font-bold">Why Localance?</h2>
-              <p className="mt-2 max-w-2xl mx-auto text-muted-foreground">
-                All the tools you need to hire or get hired, locally.
-              </p>
-            </div>
-            <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              {features.map((feature) => (
-                <div key={feature.title} className="text-center">
-                  <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mx-auto">
-                    {feature.icon}
+        {/* Projects Section */}
+        <section id="projects" className="py-20 lg:py-24">
+          <h2 className="text-3xl font-headline font-bold text-center mb-12">My Projects</h2>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <Card key={project.title} className="flex flex-col overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
+                <Image
+                  src={project.imageUrl}
+                  alt={project.title}
+                  width={600}
+                  height={400}
+                  className="w-full h-48 object-cover"
+                  data-ai-hint={project.imageHint}
+                />
+                <CardHeader>
+                  <CardTitle>{project.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <p className="text-muted-foreground mb-4">{project.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map(tag => (
+                      <span key={tag} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full">{tag}</span>
+                    ))}
                   </div>
-                  <h3 className="mt-6 font-headline text-lg font-semibold">{feature.title}</h3>
-                  <p className="mt-2 text-muted-foreground">{feature.description}</p>
+                </CardContent>
+                <div className="p-6 pt-0 flex gap-4">
+                  <Button asChild className="w-full">
+                    <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Live Demo</a>
+                  </Button>
+                  <Button variant="outline" asChild className="w-full">
+                    <a href={project.sourceUrl} target="_blank" rel="noopener noreferrer">Source Code</a>
+                  </Button>
                 </div>
-              ))}
-            </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+        
+        {/* Skills Section */}
+        <section id="skills" className="py-20 lg:py-24 bg-card rounded-lg">
+          <h2 className="text-3xl font-headline font-bold text-center mb-12">Technical Skills</h2>
+          <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
+            {skills.map((skill) => (
+              <div key={skill.category} className="text-center">
+                <div className="flex justify-center items-center h-16 w-16 rounded-full bg-primary/10 mx-auto mb-4">
+                  {skill.icon}
+                </div>
+                <h3 className="font-headline text-xl font-semibold mb-2">{skill.category}</h3>
+                <p className="text-muted-foreground">{skill.technologies.join(', ')}</p>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="py-20 lg:py-24">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto">
-              <h2 className="font-headline text-3xl font-bold">Ready to Get Started?</h2>
-              <p className="mt-4 text-lg text-muted-foreground">
-                Join a growing community of task seekers and talented freelancers. Your next opportunity is just around the corner.
-              </p>
-              <div className="mt-8">
-                <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
-                  <Link href="/signup">Join Localance Now</Link>
-                </Button>
-              </div>
-            </div>
+        {/* About Me Section */}
+        <section id="about" className="py-20 lg:py-32">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl font-headline font-bold mb-4">About Me</h2>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              Hello! I'm a Computer Science Engineer with a deep passion for technology and problem-solving. My journey into the world of coding started with a simple "Hello, World!" and has since evolved into a full-blown obsession with building beautiful and functional applications. I thrive in collaborative environments and I'm always eager to learn new technologies and take on challenging projects. When I'm not coding, you can find me exploring the outdoors, reading a good book, or tinkering with my latest hardware project.
+            </p>
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        <section id="contact" className="py-20 lg:py-24">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle className="text-3xl font-headline">Get In Touch</CardTitle>
+                <p className="text-muted-foreground">Have a question or want to work together? Drop me a message.</p>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input placeholder="Your Name" />
+                    <Input type="email" placeholder="Your Email" />
+                  </div>
+                  <Textarea placeholder="Your Message" rows={5} />
+                  <Button type="submit" className="w-full" size="lg">Send Message</Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
         </section>
       </main>
 
-      <footer className="py-6 bg-card border-t">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Localance. All rights reserved.</p>
+      {/* Footer */}
+      <footer className="py-8 border-t mt-12">
+        <div className="container mx-auto px-6 text-center text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Your Name. All rights reserved.</p>
         </div>
       </footer>
     </div>
   );
 }
+
+    
