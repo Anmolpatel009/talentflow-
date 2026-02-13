@@ -1,0 +1,8 @@
+{
+  "/auth/login/page": "app/auth/login/page.js",
+  "/freelancer/dashboard/page": "app/freelancer/dashboard/page.js",
+  "/client/tasks/create/page": "app/client/tasks/create/page.js",
+  "/client/tasks/[taskId]/page": "app/client/tasks/[taskId]/page.js",
+  "/freelancer/nearby-tasks/page": "app/freelancer/nearby-tasks/page.js",
+  "/freelancer/all-tasks/page": "app/freelancer/all-tasks/page.js"
+}

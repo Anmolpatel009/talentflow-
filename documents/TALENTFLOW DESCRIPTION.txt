@@ -1,0 +1,218 @@
+This is a **Technical Product Requirement Document (PRD)**.
+
+Copy and paste the text below and give it to your developer. It bridges the gap between your "Vision" and their "Code." It removes ambiguity, defines the logic for the "Nearby" engine, and sets the strict rules for the 10% vs 50% commission model.
+
+---
+
+# **Project Specification: TalentFlow v1.0**
+
+**Concept:** Hyper-Local, High-Urgency Service Marketplace ("Uber for Student Freelancers")
+**Tech Stack:** Next.js 14 (App Router), TypeScript, Tailwind CSS, Supabase (Auth, Postgres, Realtime, Storage).
+
+---
+
+## **1. Executive Summary**
+
+We are building a **Location-First Gig Platform**. Unlike Upwork (Global/Remote), TalentFlow focuses on **Proximity (5km radius)** and **Urgency**.
+
+* **The Problem:** Clients need immediate, local help (Content Creation, Tech Support, Errands).
+* **The Solution:** A dual-mode marketplace where verified students can pick up tasks instantly (like Rapido drivers) or bid on creative projects.
+* **Unique Selling Point:** Speed of hiring + Physical presence.
+
+---
+
+## **2. Core User Roles & Verification Logic (The "Trust Engine")**
+
+*Differentiation: Commission rates are dynamic based on verification status.*
+
+### **User Types**
+
+1. **Client:** Posts tasks. Needs Identity Verification (Phone OTP) to post "Physical/Nearby" tasks.
+2. **Freelancer (Student):** The supply side.
+
+### **Freelancer Verification Tiers (Backend Logic)**
+
+* **Tier 0 (Unverified):** Email only.
+* *Permissions:* Can only view "Remote" tasks. Cannot see or accept "Nearby" tasks.
+* *Commission:* **50%** (Hard deterrent).
+
+
+* **Tier 1 (Verified Student):** College ID + Government ID (Aadhaar/DigiLocker) uploaded.
+* *Permissions:* Full access to "Nearby" & "Immediate" tasks.
+* *Commission:* **10%**.
+* *Badge:* "Verified Student" ✅.
+
+
+
+---
+
+## **3. The "Dual-Pipe" Task Architecture**
+
+*The platform has TWO distinct workflows for tasks. The developer must build separate UI flows for these.*
+
+### **Mode A: "Immediate Need" (The Rapido Model)**
+
+* **Use Case:** Tech Support, Errands, Urgent Photography Assistant.
+* **Logic:**
+1. Client posts task with fixed price (e.g., ₹500).
+2. System broadcasts to all Tier 1 freelancers within **5km radius**.
+3. **First to Click "Accept" gets the job.** (No bidding, no proposal).
+4. Task status moves immediately to `IN_PROGRESS`.
+5. Chat opens; GPS location shared.
+
+
+
+### **Mode B: "Standard/Creative" (The Upwork Model)**
+
+* **Use Case:** Video Editing, Tutoring, Event Planning.
+* **Logic:**
+1. Client posts task.
+2. Freelancers submit **"Interest"** (Profile + Portfolio).
+3. Client reviews list of applicants.
+4. Client manually selects one.
+
+
+
+---
+
+## **4. The "Nearby" Engine (Geospatial Logic)**
+
+* **Database:** Enable **PostGIS** extension in Supabase.
+* **Location Capture:**
+* Ask for Location Permission on "Freelancer Dashboard" load.
+* Store `last_known_location` (Lat/Long) in the `profiles` table.
+
+
+* **The Query:**
+* When a client posts a task, stamp it with `task_location`.
+* Filter available tasks using: `ST_DWithin(task_location, user_location, 5000)` (5000 meters).
+
+
+
+---
+
+## **5. The 7 Launch Categories (Hardcoded)**
+
+*Do not build a generic "Category" table yet. Hardcode these 7 for the MVP to force density.*
+
+1. **Content Engine:** (Reels, Photography, BTS Assistant). *Requires "Portfolio" field.*
+2. **Hyper-Local Logistics:** (Campus Runner, Package Delivery).
+3. **Tech Neighbor:** (Wi-Fi fix, PC Clean, Smart Home setup).
+4. **Academic Support:** (Exam Prep, Notes Digitization).
+5. **Event Support:** (Crowd management, Ticket handling).
+6. **AI Training:** (Local language voice recording).
+7. **Digital Assistant:** (Data entry, Research).
+
+---
+
+## **6. Database Schema (Critical Tables)**
+
+### `profiles`
+
+* `id`: UUID (PK)
+* `role`: 'client' | 'freelancer'
+* `verification_status`: 'none' | 'pending' | 'verified'
+* `commission_rate`: integer (Default 50, changes to 10 on verify)
+* `location`: Geography(Point)
+* `college_id_url`: Text (Secure URL)
+* `gov_id_url`: Text (Secure URL)
+
+### `tasks`
+
+* `mode`: 'immediate' | 'standard'
+* `category`: Enum (The 7 categories above)
+* `geo_location`: Geography(Point)
+* `status`: 'open' | 'assigned' | 'in_progress' | 'review' | 'completed' | 'disputed'
+* `escrow_amount`: Decimal
+* `is_nearby`: Boolean
+
+### `task_handshakes` (For Immediate Mode)
+
+* `task_id`: UUID
+* `freelancer_id`: UUID
+* `accepted_at`: Timestamp (Used to lock the "First Responder")
+
+---
+
+## **7. Safety & Trust Features (Non-Negotiable)**
+
+1. **The "Start/End" Code:**
+* For physical tasks, when the freelancer arrives, the Client shows a **4-digit OTP**.
+* Freelancer enters OTP to start the timer. (Prevents "I was there but he wasn't" disputes).
+
+
+2. **SOS Button:**
+* Floating action button on the "Active Task" screen.
+* Triggers a webhook to your admin panel with user coordinates.
+
+
+3. **Privacy Masking:**
+* Do NOT show exact location on the map *before* acceptance. Show a "fuzzy circle" (Randomized 200m offset).
+
+
+
+---
+
+## **8. Payment Flow (Escrow Logic)**
+
+* **Integration:** Razorpay or Stripe Connect (India specific: Razorpay Route for split payments).
+* **The Flow:**
+1. Client Posts Task → Money deducted to **TalentFlow Escrow Wallet**.
+2. Task Completed → Client clicks "Approve".
+3. **Split Logic:**
+* Calculate Commission: `(Total * profiles.commission_rate) / 100`
+* Transfer `(Total - Commission)` to Freelancer.
+* Transfer `Commission` to Admin.
+
+
+
+
+
+---
+
+## **9. Developer Instructions: "Where to Start"**
+
+1. **Setup Supabase:** Enable Auth, Database, and Storage. Turn on PostGIS extension.
+2. **Build the "Verification Gate":** Create the profile upload page. If a user is not verified, hardcode the commission view to 50% and disable the "Accept" button for Nearby tasks.
+3. **Build "Mode A" (Immediate):** Create a dummy task and separate browsers. Test the latency. When User A clicks accept, User B should see "Task Taken" instantly (Use Supabase Realtime).
+4. **Content Creation Field:** Ensure the task submission form supports large video file uploads (chunked upload) or external drive link fields.
+
+---
+
+Addendum: Operational Safety & Logic (The "Reality Checks")
+10. Leakage Prevention (The "Chat Police")
+Requirement: Implement Regex Filtering in the chat feature.
+
+Logic: If a user sends a string matching phone number patterns (e.g., +91, 98765...) or keywords (WhatsApp, GPay, Paytm, Call me), the system must:
+
+Mask the message: Replace text with [Safety Alert: Personal contact hidden until hire].
+
+Trigger Warning: Show a toast notification: "Keep payments on TalentFlow to stay insured."
+
+11. Content Creation Specifics (The "Gear" Factor)
+Database Update (profiles table): Add a gear_list (JSON/Array) column.
+
+UI Requirement: When a freelancer selects "Content Creation" as a skill, force them to input their equipment (e.g., "iPhone 14 Pro," "Sony A7," "Ring Light").
+
+Why: Clients need to know if the "Student" is showing up with a cinema camera or a potato.
+
+12. Dispute Prevention (The "Proof of Work" Logic)
+For Mode A (Physical Tasks):
+
+The "Complete Task" button is disabled until the freelancer uploads 1 Photo (Mandatory).
+
+Use Case: Photo of the fixed router, the delivered package, or the finished setup.
+
+For Mode B (Creative Tasks):
+
+Hardcode a "Revision Limit" of 2.
+
+If Client requests a 3rd revision, the system prompts a "Paid Revision" add-on.
+
+13. The "Resume" Generator (The Student Incentive)
+Post-Task Logic: When a task is marked completed + 5-star rating:
+
+Generate a PDF Certificate (or a verified badge on profile) that says: "Verified Skill: Event Photography - 5 Projects Completed."
+
+This is crucial for the student's retention.
+
