@@ -263,7 +263,8 @@ export default function TaskDetailsPage() {
 
   const generateOTP = async () => {
     try {
-      const otpValue = Math.floor(100000 + Math.random() * 900000).toString()
+      // Generate 4-digit OTP (1000-9999)
+      const otpValue = Math.floor(1000 + Math.random() * 9000).toString()
       
       await supabase
         .from('otps')
@@ -631,10 +632,10 @@ export default function TaskDetailsPage() {
                 <input
                   type="text"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter 6-digit OTP"
-                  maxLength={6}
+                  placeholder="Enter 4-digit OTP"
+                  maxLength={4}
                 />
               </div>
               <div className="flex gap-3">

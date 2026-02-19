@@ -1,1 +1,7 @@
-{}
+{
+  "/auth/login/page": "app/auth/login/page.js",
+  "/client/dashboard/page": "app/client/dashboard/page.js",
+  "/client/tasks/[taskId]/payment/page": "app/client/tasks/[taskId]/payment/page.js",
+  "/freelancer/dashboard/page": "app/freelancer/dashboard/page.js",
+  "/page": "app/page.js"
+}

@@ -1,4 +1,4 @@
-// File: /workspaces/talentflow-/src/app/freelancer/dashboard/page.tsx
+// File: /home/user/studio/src/app/freelancer/dashboard/page.tsx
 import * as entry from '../../../../../src/app/freelancer/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

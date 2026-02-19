@@ -102,3 +102,379 @@ File or directory not found.
 ls -la to check files OR find . -name '<filename>'
 ```
 
+
+---
+
+## Command Error - 2026-02-18 17:33:54
+
+### Command:
+```bash
+cat /nonexistent/file.txt
+```
+
+### Exit Code: 1
+
+### Output:
+```
+cat: /nonexistent/file.txt: No such file or directory
+```
+
+### Explanation:
+File or directory not found.
+
+### Suggested Solution:
+```bash
+ls -la to check files OR find . -name '<filename>'
+```
+
+
+---
+
+## Command Error - 2026-02-18 17:34:29
+
+### Command:
+```bash
+git checkout nonexistent-branch-xyz
+```
+
+### Exit Code: 1
+
+### Output:
+```
+error: pathspec 'nonexistent-branch-xyz' did not match any file(s) known to git
+```
+
+### Explanation:
+The command failed with exit code 1.
+
+### Suggested Solution:
+```bash
+Check the command syntax and arguments.
+```
+
+
+---
+
+## Command Error - 2026-02-18 17:34:53
+
+### Command:
+```bash
+unknowncommand123
+```
+
+### Exit Code: 127
+
+### Output:
+```
+./git commands/run_with_log.sh: line 10: unknowncommand123: command not found
+```
+
+### Explanation:
+Command not installed or not in PATH.
+
+### Suggested Solution:
+```bash
+sudo apt-get install <package> OR npm install -g <package>
+```
+
+
+---
+
+## Shell Error - 2026-02-18 17:39:51
+
+### Command:
+```bash
+ls  /nonexistent
+```
+
+### Exit Code: 2
+
+### Explanation:
+The command exited with a non-zero status code, indicating an error occurred.
+
+### Suggested Solution:
+```bash
+# Check the command syntax and arguments
+# Run with verbose output for more details
+```
+
+
+---
+
+## Command Error - 2026-02-18 17:39:51
+
+### Command:
+```bash
+ls  /nonexistent
+```
+
+### Exit Code: 2
+
+### Possible Causes:
+- Command syntax error
+- Missing arguments
+- File or directory not found
+- Permission denied
+- Network connectivity issues
+
+### Debugging Steps:
+```bash
+# 1. Check if the command exists
+which <command>
+
+# 2. Check file permissions
+ls -la <file>
+
+# 3. Run with verbose/debug flags
+<command> --verbose
+```
+
+
+---
+
+## Shell Error - 2026-02-18 17:40:28
+
+### Command:
+```bash
+cat git commands/error_logs.md
+```
+
+### Exit Code: 1
+
+### Explanation:
+The command exited with a non-zero status code, indicating an error occurred.
+
+### Suggested Solution:
+```bash
+# Check the command syntax and arguments
+# Run with verbose output for more details
+```
+
+
+---
+
+## Command Error - 2026-02-18 17:40:28
+
+### Command:
+```bash
+cat git commands/error_logs.md
+```
+
+### Exit Code: 1
+
+### Possible Causes:
+- Command syntax error
+- Missing arguments
+- File or directory not found
+- Permission denied
+- Network connectivity issues
+
+### Debugging Steps:
+```bash
+# 1. Check if the command exists
+which <command>
+
+# 2. Check file permissions
+ls -la <file>
+
+# 3. Run with verbose/debug flags
+<command> --verbose
+```
+
+
+---
+
+## Command Error - 2026-02-18 18:21:18
+
+### Command:
+```bash
+cat git\ commands/error_logs.md
+```
+
+### Exit Code: 130
+
+### Possible Causes:
+- Command syntax error
+- Missing arguments
+- File or directory not found
+- Permission denied
+- Network connectivity issues
+
+### Debugging Steps:
+```bash
+# 1. Check if the command exists
+which <command>
+
+# 2. Check file permissions
+ls -la <file>
+
+# 3. Run with verbose/debug flags
+<command> --verbose
+```
+
+
+---
+
+## Shell Error - 2026-02-18 18:29:17
+
+### Command:
+```bash
+~/.bashrc file:
+```
+
+### Exit Code: 126
+
+### Explanation:
+The command exited with a non-zero status code, indicating an error occurred.
+
+### Suggested Solution:
+```bash
+# Check the command syntax and arguments
+# Run with verbose output for more details
+```
+
+
+---
+
+## Command Error - 2026-02-18 18:29:17
+
+### Command:
+```bash
+~/.bashrc file:
+```
+
+### Exit Code: 126
+
+### Possible Causes:
+- Command syntax error
+- Missing arguments
+- File or directory not found
+- Permission denied
+- Network connectivity issues
+
+### Debugging Steps:
+```bash
+# 1. Check if the command exists
+which <command>
+
+# 2. Check file permissions
+ls -la <file>
+
+# 3. Run with verbose/debug flags
+<command> --verbose
+```
+
+
+---
+
+## Shell Error - 2026-02-19 07:44:45
+
+### Command:
+```bash
+ls  /bitches
+```
+
+### Exit Code: 2
+
+### Explanation:
+The command exited with a non-zero status code, indicating an error occurred.
+
+### Suggested Solution:
+```bash
+# Check the command syntax and arguments
+# Run with verbose output for more details
+```
+
+
+---
+
+## Command Error - 2026-02-19 07:44:45
+
+### Command:
+```bash
+ls  /bitches
+```
+
+### Exit Code: 2
+
+### Possible Causes:
+- Command syntax error
+- Missing arguments
+- File or directory not found
+- Permission denied
+- Network connectivity issues
+
+### Debugging Steps:
+```bash
+# 1. Check if the command exists
+which <command>
+
+# 2. Check file permissions
+ls -la <file>
+
+# 3. Run with verbose/debug flags
+<command> --verbose
+```
+
+
+---
+
+## Command Error - 2026-02-19 07:46:06
+
+### Command:
+```bash
+git commit -m  " task management , profile management (phase 2 done )  
+```
+
+### Exit Code: 130
+
+### Possible Causes:
+- Command syntax error
+- Missing arguments
+- File or directory not found
+- Permission denied
+- Network connectivity issues
+
+### Debugging Steps:
+```bash
+# 1. Check if the command exists
+which <command>
+
+# 2. Check file permissions
+ls -la <file>
+
+# 3. Run with verbose/debug flags
+<command> --verbose
+```
+
+
+---
+
+## Command Error - 2026-02-19 07:46:16
+
+### Command:
+```bash
+git commit -m  " task management , profile management (phase 2 done )  
+```
+
+### Exit Code: 130
+
+### Possible Causes:
+- Command syntax error
+- Missing arguments
+- File or directory not found
+- Permission denied
+- Network connectivity issues
+
+### Debugging Steps:
+```bash
+# 1. Check if the command exists
+which <command>
+
+# 2. Check file permissions
+ls -la <file>
+
+# 3. Run with verbose/debug flags
+<command> --verbose
+```
+

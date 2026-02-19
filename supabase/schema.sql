@@ -418,5 +418,70 @@ CREATE TRIGGER IF NOT EXISTS update_applications_modtime
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- =============================================================================
+-- FUNCTION: increment_completed_tasks
+-- Increments the completed_tasks counter for a freelancer
+-- =============================================================================
+CREATE OR REPLACE FUNCTION increment_completed_tasks(freelancer_id uuid)
+RETURNS void AS $$
+BEGIN
+  UPDATE profiles
+  SET completed_tasks = completed_tasks + 1
+  WHERE id = freelancer_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =============================================================================
+-- FUNCTION: update_freelancer_rating
+-- Updates the average_rating for a freelancer after a new review
+-- =============================================================================
+CREATE OR REPLACE FUNCTION update_freelancer_rating(freelancer_id uuid)
+RETURNS void AS $$
+BEGIN
+  UPDATE profiles
+  SET average_rating = (
+    SELECT COALESCE(AVG(rating), 0)
+    FROM reviews
+    WHERE reviewee_id = freelancer_id
+  )
+  WHERE id = freelancer_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =============================================================================
+-- FUNCTION: get_fuzzy_location
+-- Returns a fuzzy location (randomized offset) for privacy
+-- =============================================================================
+CREATE OR REPLACE FUNCTION get_fuzzy_location(
+  actual_lat double precision,
+  actual_lng double precision,
+  offset_meters double precision DEFAULT 200
+)
+RETURNS TABLE (
+  fuzzy_lat double precision,
+  fuzzy_lng double precision,
+  radius double precision
+) AS $$
+DECLARE
+  random_angle double precision;
+  random_distance double precision;
+  lat_offset double precision;
+  lng_offset double precision;
+BEGIN
+  -- Generate random angle and distance
+  random_angle := random() * 2 * pi();
+  random_distance := random() * offset_meters;
+  
+  -- Calculate offsets (approximate conversion)
+  lat_offset := (random_distance * cos(random_angle)) / 111320.0;
+  lng_offset := (random_distance * sin(random_angle)) / (111320.0 * cos(actual_lat * pi() / 180.0));
+  
+  RETURN QUERY SELECT 
+    actual_lat + lat_offset,
+    actual_lng + lng_offset,
+    offset_meters;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =============================================================================
 -- END OF SCHEMA
 -- =============================================================================

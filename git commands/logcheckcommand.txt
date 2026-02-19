@@ -1,0 +1,9 @@
+cat git\ commands/error_logs.md
+
+To Make It Permanent (Optional)
+Add to your ~/.bashrc file:
+
+echo 'source /home/user/studio/git\ commands/shell_hook.sh' >> ~/.bashrc
+Then reload:
+
+source ~/.bashrc

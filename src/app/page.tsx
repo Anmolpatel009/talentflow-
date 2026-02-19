@@ -3,7 +3,7 @@ import Link from 'next/link'
 export default function Home() {
   return (
     <main className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section - Optimized for LCP */}
       <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
@@ -14,8 +14,7 @@ export default function Home() {
               Hyper-Local Student Freelancer Marketplace
             </p>
             <p className="text-lg mb-12 text-blue-200 max-w-2xl mx-auto">
-              Connect with verified student freelancers in your neighborhood. 
-              Get immediate help for content creation, tech support, errands, and more.
+              Connect with verified student freelancers in your neighborhood. Get immediate help for content creation, tech support, errands, and more.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -35,7 +34,7 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Wave divider */}
+        {/* Wave divider - simplified SVG */}
         <div className="relative h-16">
           <svg className="absolute bottom-0 w-full h-16 text-gray-100" viewBox="0 0 1440 64" preserveAspectRatio="none">
             <path fill="currentColor" d="M0,32L60,37.3C120,43,240,53,360,53.3C480,53,600,43,720,42.7C840,43,960,53,1080,53.3C1200,53,1320,43,1380,37.3L1440,32L1440,64L1380,64C1320,64,1200,64,1080,64C960,64,840,64,720,64C600,64,480,64,360,64C240,64,120,64,60,64L0,64Z" />
@@ -49,39 +48,33 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Mode A - Immediate */}
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mb-4">
                 <span className="text-white text-xl">⚡</span>
               </div>
               <h3 className="text-xl font-semibold mb-2">Mode A: Immediate</h3>
               <p className="text-gray-600">
-                Post a task with a fixed price. Verified freelancers within 5km receive instant notifications. 
-                First to accept gets the job!
+                Post a task with a fixed price. Verified freelancers within 5km receive instant notifications. First to accept gets the job!
               </p>
             </div>
 
-            {/* Mode B - Standard */}
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-4">
                 <span className="text-white text-xl">📋</span>
               </div>
               <h3 className="text-xl font-semibold mb-2">Mode B: Standard</h3>
               <p className="text-gray-600">
-                Post a creative project. Freelancers submit proposals with portfolios. 
-                Review and choose the best fit for your project.
+                Post a creative project. Freelancers submit proposals with portfolios. Review and choose the best fit.
               </p>
             </div>
 
-            {/* Verification */}
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-4">
                 <span className="text-white text-xl">✅</span>
               </div>
               <h3 className="text-xl font-semibold mb-2">Verified Students</h3>
               <p className="text-gray-600">
-                All freelancers are verified students with college ID. 
-                Enjoy 10% commission on verified accounts vs 50% on unverified.
+                All freelancers are verified students. Enjoy 10% commission on verified accounts vs 50% on unverified.
               </p>
             </div>
           </div>
@@ -94,23 +87,34 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-center mb-12">Categories</h2>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { icon: '🎬', name: 'Content Engine' },
-              { icon: '📦', name: 'Hyper-Local Logistics' },
-              { icon: '💻', name: 'Tech Neighbor' },
-              { icon: '📚', name: 'Academic Support' },
-              { icon: '🎪', name: 'Event Support' },
-              { icon: '🎙️', name: 'AI Training' },
-              { icon: '📊', name: 'Digital Assistant' },
-            ].map((category) => (
-              <div 
-                key={category.name}
-                className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer"
-              >
-                <div className="text-4xl mb-2">{category.icon}</div>
-                <div className="font-medium text-gray-800">{category.name}</div>
-              </div>
-            ))}
+            <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="text-4xl mb-2">🎬</div>
+              <div className="font-medium text-gray-800">Content Engine</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="text-4xl mb-2">📦</div>
+              <div className="font-medium text-gray-800">Hyper-Local Logistics</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="text-4xl mb-2">💻</div>
+              <div className="font-medium text-gray-800">Tech Neighbor</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="text-4xl mb-2">📚</div>
+              <div className="font-medium text-gray-800">Academic Support</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="text-4xl mb-2">🎪</div>
+              <div className="font-medium text-gray-800">Event Support</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="text-4xl mb-2">🎙️</div>
+              <div className="font-medium text-gray-800">AI Training</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="text-4xl mb-2">📊</div>
+              <div className="font-medium text-gray-800">Digital Assistant</div>
+            </div>
           </div>
         </div>
       </section>
@@ -155,7 +159,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p>© {new Date().getFullYear()} TalentFlow. All rights reserved.</p>
+            <p>© 2024 TalentFlow. All rights reserved.</p>
           </div>
         </div>
       </footer>
