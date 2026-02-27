@@ -1,0 +1,21 @@
+{
+  "name": "@sentinel/core",
+  "version": "0.1.0",
+  "description": "Core types, constants, and utilities for Sentinel-Node",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

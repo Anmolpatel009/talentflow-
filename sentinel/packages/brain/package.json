@@ -1,0 +1,31 @@
+{
+  "name": "@sentinel/brain",
+  "version": "0.1.0",
+  "description": "Active Inference engine for Sentinel-Node anomaly detection",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist",
+    "build:functions": "cd functions && npm run build",
+    "deploy:functions": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "@sentinel/core": "*",
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^4.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
