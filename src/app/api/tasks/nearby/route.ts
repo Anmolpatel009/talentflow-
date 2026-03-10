@@ -1,27 +1,15 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { withSentinelHandler } from '@sentinel/sensor'
 
-export async function GET(request: Request) {
+async function handler(request: Request) {
   try {
     const supabase = createServerSupabaseClient()
     
-    // Get the authorization header or cookies
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get('sb-access-token')?.value ||
-                        cookieStore.get('supabase-auth-token')?.value
+    // Get user from the session
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    // Get user from the access token in the request
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '') || accessToken
-    
-    let user = null
-    if (token) {
-      const { data } = await supabase.auth.getUser(token)
-      user = data.user
-    }
-    
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -171,3 +159,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withSentinelHandler(handler)

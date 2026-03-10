@@ -2,11 +2,12 @@
 
 # Terminal Error Monitor - Background Service
 # This script runs in the background and monitors terminal output for errors
-# Automatically logs errors to error_logs.md
+# Automatically logs errors to error_logs.md and tracks learning from file changes
 
 LOG_FILE="git commands/error_logs.md"
 MONITOR_DIR="/home/user/studio"
 PID_FILE="git commands/.monitor.pid"
+TRACKER_FILE="LEARNING_TRACKER.md"
 
 # Function to log error with timestamp
 log_error() {
@@ -36,6 +37,44 @@ $solution
 
 EOF
     echo "[$(date)] Error logged: $error_msg" >> "git commands/monitor.log"
+}
+
+# Function to log file changes as learning entry
+log_file_change() {
+    local filename="$1"
+    local change_type="$2"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    # Create learning entry
+    local entry="### ${timestamp% *} - File ${change_type}: ${filename}
+**Accomplished**: File ${change_type}: ${filename}  
+**Technical Concepts**: File manipulation  
+**Key Changes**: ${change_type} on ${filename}  
+**Related Files**: ${filename}
+
+---"
+
+    # Insert entry after the # Entries section header
+    if [ -f "$TRACKER_FILE" ]; then
+        sed -i '3r /dev/stdin' "$TRACKER_FILE" <<<"$entry"
+        
+        # Update placeholder entry to ensure it's always at the end
+        local placeholder="### [YYYY-MM-DD] - [Task Description]
+**Accomplished**: [What you did]  
+**Technical Concepts**: [Concepts learned or used]  
+**Key Changes**: [Code or configuration changes]  
+**Related Files**: [Links to affected files]
+
+---"
+        
+        # Remove existing placeholder if it exists
+        sed -i '/### \[YYYY-MM-DD\]/,/---/d' "$TRACKER_FILE"
+        
+        # Append new placeholder
+        echo "$placeholder" >>"$TRACKER_FILE"
+        
+        echo "[$(date)] File change tracked: $filename" >> "git commands/monitor.log"
+    fi
 }
 
 # Function to analyze output and detect errors
@@ -142,6 +181,31 @@ start_monitor() {
         while true; do
             if read -r line < "$PIPE_FILE"; then
                 analyze_output "$line"
+                
+                # Check for file change commands (like 'git add', 'mv', 'cp', 'rm', 'touch')
+                if echo "$line" | grep -qiE "(git add|mv |cp |rm |touch )"; then
+                    # Extract filename from command
+                    filename=$(echo "$line" | grep -oE "(git add|mv|cp|rm|touch) [^ ]+" | awk '{print $2}')
+                    if [ -n "$filename" ]; then
+                        # Determine change type
+                        if echo "$line" | grep -qi "git add"; then
+                            log_file_change "$filename" "Added"
+                        elif echo "$line" | grep -qi "mv "; then
+                            log_file_change "$filename" "Moved"
+                        elif echo "$line" | grep -qi "cp "; then
+                            log_file_change "$filename" "Copied"
+                        elif echo "$line" | grep -qi "rm "; then
+                            log_file_change "$filename" "Deleted"
+                        elif echo "$line" | grep -qi "touch "; then
+                            log_file_change "$filename" "Created"
+                        fi
+                    fi
+                fi
+                
+                # Check for file modification commands (like 'npm run', 'node', 'tsc')
+                if echo "$line" | grep -qiE "(npm run|node |tsc |npx )"; then
+                    log_file_change "Project Files" "Modified"
+                fi
             fi
         done
     ) &

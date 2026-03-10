@@ -5,6 +5,11 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { TASK_CATEGORIES } from '@/types'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Card } from '@/components/ui/Card'
+import { Divider } from '@/components/ui/Progress'
+import { cn } from '@/lib/utils'
 
 function SignupContent() {
   const [step, setStep] = useState(1)
@@ -96,7 +101,6 @@ function SignupContent() {
       }
 
       // 3. Update or Insert Profile
-      // First try to update, if no rows affected then insert
       const updateResult = await supabase
         .from('profiles')
         .update({
@@ -190,325 +194,581 @@ function SignupContent() {
     }
   }
 
+  const totalSteps = selectedRole === 'freelancer' ? 3 : 2
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-lg w-full space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Create Your Account</h2>
-          <p className="mt-2 text-gray-600">
-            Step {step} of 3
-          </p>
+    <div className="min-h-screen flex">
+      {/* Left Side - Visual */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float delay-300" />
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-pink-400/20 rounded-full blur-2xl animate-float delay-500" />
         </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
-          {/* Step 1: Basic Info */}
-          {step === 1 && (
-            <div className="space-y-4">
-              {/* Role Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  I want to
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole('client')}
-                    className={`p-4 border-2 rounded-lg text-center transition-colors ${
-                      selectedRole === 'client'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <span className="text-2xl">💼</span>
-                    <div className="font-medium">Hire Help</div>
-                    <div className="text-xs text-gray-500">I'm a client</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole('freelancer')}
-                    className={`p-4 border-2 rounded-lg text-center transition-colors ${
-                      selectedRole === 'freelancer'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <span className="text-2xl">💪</span>
-                    <div className="font-medium">Work</div>
-                    <div className="text-xs text-gray-500">I'm a freelancer</div>
-                  </button>
-                </div>
+        
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-grid opacity-10" />
+        
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20">
+          <div className="mb-8">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <span className="text-white font-bold text-lg">T</span>
               </div>
+              <span className="text-2xl font-bold text-white">TalentFlow</span>
+            </Link>
+          </div>
+          
+          <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
+            Start Your
+            <br />
+            <span className="text-white/80">Journey Today</span>
+          </h1>
+          
+          <p className="text-lg text-white/70 mb-8 max-w-md">
+            {selectedRole === 'freelancer' 
+              ? 'Join thousands of students earning while learning. Set your own hours, choose your projects.'
+              : 'Find verified student freelancers in your neighborhood. Get quality work at fair prices.'}
+          </p>
+          
+          {/* Benefits */}
+          <div className="space-y-4">
+            {selectedRole === 'freelancer' ? (
+              <>
+                {[
+                  { icon: '💰', text: 'Earn on your own schedule' },
+                  { icon: '🎓', text: 'Get verified for lower fees' },
+                  { icon: '📍', text: 'Work locally, no commute' },
+                ].map((benefit, index) => (
+                  <div key={index} className="flex items-center gap-3 text-white/90">
+                    <span className="text-xl">{benefit.icon}</span>
+                    <span>{benefit.text}</span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                {[
+                  { icon: '⚡', text: 'Instant task matching' },
+                  { icon: '✅', text: 'Verified student talent' },
+                  { icon: '🔒', text: 'Secure payments' },
+                ].map((benefit, index) => (
+                  <div key={index} className="flex items-center gap-3 text-white/90">
+                    <span className="text-xl">{benefit.icon}</span>
+                    <span>{benefit.text}</span>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+        
+        {/* Bottom Decoration */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent" />
+      </div>
 
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
-                  Full Name
-                </label>
-                <input
-                  id="fullName"
-                  type="text"
-                  required
+      {/* Right Side - Signup Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background relative overflow-y-auto">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-dots opacity-30" />
+        
+        <div className="w-full max-w-md relative z-10 py-8">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">T</span>
+              </div>
+              <span className="text-2xl font-bold text-foreground">TalentFlow</span>
+            </Link>
+          </div>
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-2">Create your account</h2>
+            <p className="text-muted-foreground">Step {step} of {totalSteps}</p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="flex gap-2 mb-8">
+            {Array.from({ length: totalSteps }).map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  'h-1 flex-1 rounded-full transition-all duration-300',
+                  index < step ? 'bg-primary' : 'bg-muted'
+                )}
+              />
+            ))}
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm flex items-start gap-3 animate-scale-in">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSignup} className="space-y-5">
+            {/* Step 1: Basic Info */}
+            {step === 1 && (
+              <div className="space-y-5 animate-fade-in-up">
+                {/* Role Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-3">
+                    I want to
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRole('client')}
+                      className={cn(
+                        'p-4 rounded-xl border-2 text-center transition-all duration-200',
+                        selectedRole === 'client'
+                          ? 'border-primary bg-primary/5 shadow-soft'
+                          : 'border-border hover:border-primary/30 hover:bg-muted/50'
+                      )}
+                    >
+                      <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-2xl mb-2">
+                        💼
+                      </div>
+                      <div className="font-semibold text-foreground">Hire Help</div>
+                      <div className="text-xs text-muted-foreground mt-1">I'm a client</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRole('freelancer')}
+                      className={cn(
+                        'p-4 rounded-xl border-2 text-center transition-all duration-200',
+                        selectedRole === 'freelancer'
+                          ? 'border-primary bg-primary/5 shadow-soft'
+                          : 'border-border hover:border-primary/30 hover:bg-muted/50'
+                      )}
+                    >
+                      <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl mb-2">
+                        💪
+                      </div>
+                      <div className="font-semibold text-foreground">Work</div>
+                      <div className="text-xs text-muted-foreground mt-1">I'm a freelancer</div>
+                    </button>
+                  </div>
+                </div>
+
+                <Input
+                  label="Full Name"
+                  placeholder="John Doe"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
                   required
+                  leftIcon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  }
+                />
+
+                <Input
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
                   required
-                  minLength={6}
+                  leftIcon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  }
+                />
+
+                <Input
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="••••••••"
+                  required
+                  hint="At least 6 characters"
+                  leftIcon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  }
                 />
-              </div>
 
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                  Phone Number {selectedRole === 'client' && <span className="text-red-500">*</span>}
-                </label>
-                <input
-                  id="phone"
+                <Input
+                  label="Phone Number"
                   type="tel"
-                  required={selectedRole === 'client'}
+                  placeholder="+91 9876543210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="+91 9876543210"
+                  required={selectedRole === 'client'}
+                  leftIcon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  }
                 />
-              </div>
 
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                  City
-                </label>
-                <input
-                  id="city"
-                  type="text"
-                  required
+                <Input
+                  label="City"
+                  placeholder="Mumbai, Delhi, Bangalore..."
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Mumbai, Delhi, Bangalore..."
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Continue
-              </button>
-            </div>
-          )}
-
-          {/* Step 2: Freelancer Additional Info */}
-          {step === 2 && selectedRole === 'freelancer' && (
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800">Student Verification</h3>
-                <p className="text-sm text-blue-600 mt-1">
-                  Upload your documents to get verified and access nearby tasks with 10% commission.
-                </p>
-              </div>
-
-              <div>
-                <label htmlFor="collegeName" className="block text-sm font-medium text-gray-700">
-                  College Name
-                </label>
-                <input
-                  id="collegeName"
-                  type="text"
                   required
-                  value={collegeName}
-                  onChange={(e) => setCollegeName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="IIT Mumbai, DU, etc."
+                  leftIcon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  }
                 />
-              </div>
 
-              <div>
-                <label htmlFor="collegeId" className="block text-sm font-medium text-gray-700">
-                  College ID Card
-                </label>
-                <input
-                  id="collegeId"
-                  type="file"
-                  accept="image/*,.pdf"
-                  required={!collegeIdFile}
-                  onChange={(e) => setCollegeIdFile(e.target.files?.[0] || null)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-                {collegeIdFile && (
-                  <p className="text-sm text-green-600 mt-1">✓ {collegeIdFile.name}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="govId" className="block text-sm font-medium text-gray-700">
-                  Government ID (Aadhaar/DigLocker)
-                </label>
-                <input
-                  id="govId"
-                  type="file"
-                  accept="image/*,.pdf"
-                  required={!govIdFile}
-                  onChange={(e) => setGovIdFile(e.target.files?.[0] || null)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-                {govIdFile && (
-                  <p className="text-sm text-green-600 mt-1">✓ {govIdFile.name}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Skills
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {TASK_CATEGORIES.map((cat) => (
-                    <button
-                      key={cat.value}
-                      type="button"
-                      onClick={() => toggleSkill(cat.value)}
-                      className={`p-2 border rounded-lg text-sm transition-colors ${
-                        selectedSkills.includes(cat.value)
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      {cat.icon} {cat.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <button
+                <Button
                   type="button"
-                  onClick={() => setStep(1)}
-                  className="w-1/2 py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="w-1/2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={() => setStep(2)}
+                  className="w-full"
+                  size="lg"
+                  rightIcon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  }
                 >
                   Continue
-                </button>
+                </Button>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Step 2: Client - skip to step 3 */}
-          {step === 2 && selectedRole === 'client' && (
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="w-1/2 py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="w-1/2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Continue
-              </button>
-            </div>
-          )}
+            {/* Step 2: Freelancer Additional Info */}
+            {step === 2 && selectedRole === 'freelancer' && (
+              <div className="space-y-5 animate-fade-in-up">
+                <Card variant="default" className="bg-primary/5 border-primary/20">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Student Verification</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Upload your documents to get verified and access nearby tasks with 10% commission.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
 
-          {/* Step 3: Location */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-medium text-green-800">📍 Location</h3>
-                <p className="text-sm text-green-600 mt-1">
-                  {location
-                    ? `✓ Location captured: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
-                    : 'Get your current location to find nearby tasks/freelancers'}
-                </p>
+                <Input
+                  label="College Name"
+                  placeholder="IIT Mumbai, DU, etc."
+                  value={collegeName}
+                  onChange={(e) => setCollegeName(e.target.value)}
+                  required
+                  leftIcon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    </svg>
+                  }
+                />
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    College ID Card
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      required={!collegeIdFile}
+                      onChange={(e) => setCollegeIdFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                      id="collegeId"
+                    />
+                    <label
+                      htmlFor="collegeId"
+                      className="flex items-center justify-center gap-3 px-4 py-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors"
+                    >
+                      {collegeIdFile ? (
+                        <>
+                          <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-foreground font-medium">{collegeIdFile.name}</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-muted-foreground">Upload College ID</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Government ID (Aadhaar/DigLocker)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      required={!govIdFile}
+                      onChange={(e) => setGovIdFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                      id="govId"
+                    />
+                    <label
+                      htmlFor="govId"
+                      className="flex items-center justify-center gap-3 px-4 py-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors"
+                    >
+                      {govIdFile ? (
+                        <>
+                          <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-foreground font-medium">{govIdFile.name}</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-muted-foreground">Upload Government ID</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-3">
+                    Your Skills
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {TASK_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() => toggleSkill(cat.value)}
+                        className={cn(
+                          'p-3 rounded-xl text-sm text-left transition-all duration-200',
+                          selectedSkills.includes(cat.value)
+                            ? 'bg-primary/10 border-2 border-primary text-primary'
+                            : 'border border-border hover:border-primary/30 hover:bg-muted/50'
+                        )}
+                      >
+                        <span className="mr-2">{cat.icon}</span>
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setStep(1)}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="flex-1"
+                    size="lg"
+                    disabled={selectedSkills.length === 0}
+                  >
+                    Continue
+                  </Button>
+                </div>
               </div>
+            )}
 
-              {location ? (
-                <button
-                  type="button"
-                  onClick={getLocation}
-                  disabled={locationLoading}
-                  className="w-full py-3 px-4 border border-green-500 rounded-lg shadow-sm text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  {locationLoading ? 'Getting location...' : 'Update Location'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={getLocation}
-                  disabled={locationLoading}
-                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  {locationLoading ? 'Getting location...' : '📍 Get My Location'}
-                </button>
-              )}
+            {/* Step 2: Client - skip to location */}
+            {step === 2 && selectedRole === 'client' && (
+              <div className="space-y-5 animate-fade-in-up">
+                <Card variant="default" className="bg-emerald-500/5 border-emerald-500/20">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/10">
+                      <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Enable Location</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Get matched with freelancers in your area for faster service.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
 
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(selectedRole === 'freelancer' ? 2 : 1)}
-                  className="w-1/2 py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading || (selectedRole === 'freelancer' && selectedSkills.length === 0)}
-                  className="w-1/2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Creating account...' : 'Create Account'}
-                </button>
+                {location ? (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <div>
+                        <p className="font-medium text-foreground">Location captured</p>
+                        <p className="text-sm text-muted-foreground">
+                          {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={getLocation}
+                    variant="secondary"
+                    className="w-full"
+                    size="lg"
+                    isLoading={locationLoading}
+                    leftIcon={
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    }
+                  >
+                    {locationLoading ? 'Getting location...' : 'Get My Location'}
+                  </Button>
+                )}
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setStep(1)}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    size="lg"
+                    isLoading={loading}
+                  >
+                    Create Account
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-        </form>
+            )}
 
-        <p className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign in
+            {/* Step 3: Location (Freelancer) */}
+            {step === 3 && selectedRole === 'freelancer' && (
+              <div className="space-y-5 animate-fade-in-up">
+                <Card variant="default" className="bg-emerald-500/5 border-emerald-500/20">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/10">
+                      <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Enable Location</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Get notified about tasks near you and improve your visibility.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                {location ? (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <div>
+                        <p className="font-medium text-foreground">Location captured</p>
+                        <p className="text-sm text-muted-foreground">
+                          {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={getLocation}
+                    variant="secondary"
+                    className="w-full"
+                    size="lg"
+                    isLoading={locationLoading}
+                    leftIcon={
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    }
+                  >
+                    {locationLoading ? 'Getting location...' : 'Get My Location'}
+                  </Button>
+                )}
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setStep(2)}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    size="lg"
+                    isLoading={loading}
+                    disabled={selectedSkills.length === 0}
+                  >
+                    Create Account
+                  </Button>
+                </div>
+              </div>
+            )}
+          </form>
+
+          {/* Sign In Link */}
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="font-semibold text-primary hover:text-primary/80">
+              Sign in
+            </Link>
+          </p>
+
+          {/* Back to Home */}
+          <Link 
+            href="/" 
+            className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground mt-6 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to home
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   )
@@ -516,11 +776,12 @@ function SignupContent() {
 
 function SignupLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-lg w-full space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Loading...</h2>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center animate-pulse">
+          <span className="text-white font-bold text-lg">T</span>
         </div>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     </div>
   )

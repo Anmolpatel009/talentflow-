@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Divider } from '@/components/ui/Progress'
+import { useToastContext } from '@/contexts/ToastContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,7 +15,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  console.log("Supabase URL Check:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   const supabase = createClient()
+  const { showToast } = useToastContext()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,171 +25,225 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('🔐 Attempting login with:', email)
+
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
-        setError(error.message)
+        console.error('❌ Login error:', error)
+        if (error.message.includes('Failed to fetch') || error.message.includes('Network') || error.message.includes('timeout')) {
+          showToast('error', 'Network connection error. Please check your internet connection and try again.')
+        } else {
+          showToast('error', error.message)
+        }
         return
       }
 
-      // Get user profile to redirect to appropriate dashboard
-      const { data: { user } } = await supabase.auth.getUser()
+      // Use user from sign-in response
+      const user = signInData.user
       
       if (user) {
+        console.log('✅ Login successful for user:', user.id)
+        
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('user_id', user.id)
           .single()
 
+        // Determine redirect path
+        let redirectPath = '/client/dashboard'
         if (profileError) {
-          // Profile might not exist, create redirect based on role stored in metadata
-          const { data: userMetadata } = await supabase.auth.getUser()
-          const role = userMetadata.user?.user_metadata?.role || 'client'
-          router.push(role === 'freelancer' ? '/freelancer/dashboard' : '/client/dashboard')
+          console.warn('⚠️ Profile not found:', profileError)
+          // Profile might not exist, use role from user metadata
+          const role = user.user_metadata?.role || 'client'
+          redirectPath = role === 'freelancer' ? '/freelancer/dashboard' : '/client/dashboard'
         } else if (profile?.role === 'freelancer') {
-          router.push('/freelancer/dashboard')
-        } else {
-          router.push('/client/dashboard')
+          redirectPath = '/freelancer/dashboard'
         }
+
+        // Show success toast and redirect
+        showToast('success', 'Login successful! Redirecting...')
+        
+        // Use Next.js router for proper navigation
+        router.push(redirectPath)
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGoogleLogin = async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+    } catch (err: any) {
+      console.error('🚨 Unexpected login error:', err)
+      console.error('🚨 Error details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack,
+        cause: err.cause
       })
-
-      if (error) {
-        setError(error.message)
+      
+      if (err.message?.includes('Failed to fetch') || err.message?.includes('Network') || err.message?.includes('timeout')) {
+        showToast('error', 'Network connection error. Please check your internet connection and try again.')
+      } else {
+        showToast('error', `An unexpected error occurred: ${err.message}`)
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
   }
+
+
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-gray-600">Sign in to your TalentFlow account</p>
+    <div className="min-h-screen flex">
+      {/* Left Side - Visual */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float delay-300" />
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-pink-400/20 rounded-full blur-2xl animate-float delay-500" />
         </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
-            {error}
+        
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-grid opacity-10" />
+        
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20">
+          <div className="mb-8">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <span className="text-white font-bold text-lg">T</span>
+              </div>
+              <span className="text-2xl font-bold text-white">TalentFlow</span>
+            </Link>
           </div>
-        )}
-
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-        </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          
+          <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
+            Connect with Local
+            <br />
+            <span className="text-white/80">Student Talent</span>
+          </h1>
+          
+          <p className="text-lg text-white/70 mb-8 max-w-md">
+            Join thousands of students and clients using TalentFlow to find and offer local services.
+          </p>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-6">
+            {[
+              { value: '10K+', label: 'Freelancers' },
+              { value: '50K+', label: 'Tasks Done' },
+              { value: '4.9', label: 'Avg Rating' },
+            ].map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-2xl font-bold text-white">{stat.value}</div>
+                <div className="text-sm text-white/60">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
+        
+        {/* Bottom Decoration */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent" />
+      </div>
 
-        <div>
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      {/* Right Side - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background relative">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-dots opacity-30" />
+        
+        <div className="w-full max-w-md relative z-10">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">T</span>
+              </div>
+              <span className="text-2xl font-bold text-foreground">TalentFlow</span>
+            </Link>
+          </div>
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-2">Welcome back</h2>
+            <p className="text-muted-foreground">Sign in to continue to your account</p>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm flex items-start gap-3 animate-scale-in">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-5">
+            <Input
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              leftIcon={
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              }
+            />
+
+            <Input
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              leftIcon={
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              }
+            />
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20" />
+                <span className="text-sm text-muted-foreground">Remember me</span>
+              </label>
+              <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-primary/80 font-medium">
+                Forgot password?
+              </Link>
+            </div>
+
+            <Button type="submit" className="w-full" size="lg" isLoading={loading}>
+              Sign In
+            </Button>
+          </form>
+
+
+
+          {/* Sign Up Link */}
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            Don't have an account?{' '}
+            <Link href="/auth/signup" className="font-semibold text-primary hover:text-primary/80">
+              Create an account
+            </Link>
+          </p>
+
+          {/* Back to Home */}
+          <Link 
+            href="/" 
+            className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground mt-6 transition-colors"
           >
-            <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Continue with Google
-          </button>
-        </div>
-
-        <p className="text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign up
+            Back to home
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   )

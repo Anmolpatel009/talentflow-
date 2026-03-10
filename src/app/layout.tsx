@@ -1,17 +1,19 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { ToastProvider } from '@/contexts/ToastContext'
 
 const inter = Inter({ 
   subsets: ['latin'],
-  display: 'swap', // Improves LCP by preventing invisible text
+  display: 'swap',
   preload: true,
+  variable: '--font-inter',
 })
 
 export const metadata: Metadata = {
   title: 'TalentFlow - Hyper-Local Student Freelancer Marketplace',
   description: 'Connect with verified student freelancers in your neighborhood. Get immediate help for content creation, tech support, errands, and more.',
-  keywords: ['freelance', 'students', 'local services', 'gig economy', 'nearby tasks'],
+  keywords: ['freelancer', 'student', 'local services', 'gig economy', 'tasks', 'marketplace'],
   openGraph: {
     title: 'TalentFlow - Hyper-Local Student Freelancer Marketplace',
     description: 'Connect with verified student freelancers in your neighborhood.',
@@ -26,8 +28,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={inter.className}>
-        {children}
+      <body className={`${inter.className} ${inter.variable}`}>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   )

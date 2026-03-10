@@ -1,11 +1,22 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+export function createClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables')
+  // DEBUG: Log to browser console
+  console.log("[Supabase Client] URL:", supabaseUrl ? "Set" : "MISSING");
+  console.log("[Supabase Client] Key:", supabaseKey ? "Set" : "MISSING");
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("[Supabase Client] ERROR: Missing environment variables!");
+    console.error("[Supabase Client] NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl);
+    console.error("[Supabase Client] NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseKey ? "[PRESENT]" : "[MISSING]");
+    throw new Error("Supabase URL or Key is missing. Check your .env.local file.");
+  }
+
+  return createSupabaseClient(supabaseUrl, supabaseKey);
 }
 
-export const createClient = () => createSupabaseClient(supabaseUrl, supabaseAnonKey)
-export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey)
+// For backward compatibility
+export const supabase = createClient()

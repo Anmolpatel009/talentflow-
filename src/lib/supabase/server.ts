@@ -1,47 +1,50 @@
-import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
+import { createPagesServerClient, createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { cookies } from 'next/headers'
 
+// Define these at the top level so all functions can see them
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-// Server client with service role (bypasses RLS - use carefully)
-export const createServerSupabaseClient = (): SupabaseClient => {
-  return createSupabaseClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  })
+// 1. For App Router (API Routes/Server Actions)
+export function createServerSupabaseClient() {
+  const cookieStore = cookies()
+  return createRouteHandlerClient({ cookies: () => cookieStore })
 }
 
-// Server client with user context (respects RLS)
-export const createServerClientWithUser = async (): Promise<SupabaseClient> => {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('sb-access-token')?.value
-  
-  const client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  })
-
-  // If we have an access token, set it
-  if (accessToken) {
-    await client.auth.setSession({
-      access_token: accessToken,
-      refresh_token: ''
-    })
-  }
-
-  return client
+// 2. For Pages Router API routes
+export function createPagesServerSupabaseClient(
+  ctx: { req: NextApiRequest; res: NextApiResponse }
+) {
+  return createPagesServerClient(ctx)
 }
 
-// Legacy export
-export const supabaseServer = createSupabaseClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+// 3. Service Role Client (STRICTLY SERVER-SIDE)
+export function createServiceRoleClient() {
+  return createSupabaseClient(
+    supabaseUrl,
+    supabaseServiceKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  )
+}
+
+// 4. Server Component Client (For read-only operations)
+export function createServerClientWithUser() {
+  return createSupabaseClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  )
+}

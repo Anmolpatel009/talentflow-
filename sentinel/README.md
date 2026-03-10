@@ -1,38 +1,45 @@
 # Sentinel-Node
 
-> Self-healing infrastructure agent for TalentFlow using Active Inference
+> Self-hosted SRE agent that regulates your application like a cybernetic governor
 
-## Overview
+## The Elevator Pitch for Developers
 
-Sentinel-Node is an autonomous infrastructure management system that applies Active Inference principles from neuroscience to DevOps. It monitors your TalentFlow marketplace, detects anomalies through probabilistic "surprise" scoring, and autonomously remediates issues—with optional human oversight via Discord.
+Stop setting static alert rules like "CPU > 80%". Sentinel-Node creates a **generative model of your app's normal behavior** and calculates the "surprise" of every incoming metric. If the surprise is too high, it doesn't just ping you on Discord—it **suggests or executes a fix based on the specific error pattern**.
+
+## Why Sentinel-Node?
+
+### Cost: $0 Budget
+Uses Firebase Cloud Functions and Firestore - both have generous free tiers.
+
+### Autonomy: It's a Doctor, Not a Mirror
+Traditional monitoring tools show you what's happening. Sentinel-Node tells you how to fix it.
+
+### Privacy: Your Data Stays Yours
+All telemetry stays in your Firebase/infrastructure. No third-party services.
+
+### Simplicity: No PhD Required
+Built with TypeScript/Node.js and basic statistics. If you understand mean, variance, and webhooks, you can build this.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Sentinel-Node Architecture                   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │   Sensor    │───▶│   Brain     │───▶│  Mediator   │         │
-│  │  (Layer 1)  │    │  (Layer 4)  │    │  (Layer 5)  │         │
-│  │  Ingestion  │    │  Executive  │    │  Discord    │         │
-│  └─────────────┘    └─────────────┘    └─────────────┘         │
-│         │                  │                  │                 │
-│         ▼                  ▼                  ▼                 │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │  Firestore  │    │  Internal   │    │   Discord   │         │
-│  │  Telemetry  │    │   Model     │    │   Alerts    │         │
-│  └─────────────┘    └─────────────┘    └─────────────┘         │
-│                            │                                    │
-│                            ▼                                    │
-│                     ┌─────────────┐                            │
-│                     │  Actuator   │                            │
-│                     │  (Layer 6)  │                            │
-│                     │  Remediate  │                            │
-│                     └─────────────┘                            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      Cybernetic SRE Agent                        │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
+│  │  Sensor      │───▶│  Brain       │───▶│  Actuator    │       │
+│  │  (Nervous    │    │  (Governor)  │    │  (Muscles)   │       │
+│  │  System)     │    │              │    │              │       │
+│  └──────────────┘    └──────────────┘    └──────────────┘       │
+│         │                     │                     │            │
+│         ▼                     ▼                     ▼            │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
+│  │  Firestore   │    │  Hourly      │    │  Webhooks    │       │
+│  │  (Memory)    │    │  Profiles    │    │  (Actions)   │       │
+│  └──────────────┘    └──────────────┘    └──────────────┘       │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Packages
@@ -41,17 +48,10 @@ Sentinel-Node is an autonomous infrastructure management system that applies Act
 Core types, constants, and utilities shared across all packages.
 
 ### `@sentinel/sensor`
-Telemetry collection middleware for Next.js. Captures request metrics and batches them to Firestore.
+**Nervous System** - Telemetry collection middleware for Next.js. Captures request metrics with a 60-second moving window aggregator.
 
 ### `@sentinel/brain`
-Active Inference engine and anomaly detection. Runs as Firebase Cloud Functions.
-
-### `@sentinel/mediator` (coming soon)
-Discord bot for human-in-the-loop approval of remediation actions.
-
-### `@sentinel/actuator` (coming soon)
-Remediation execution engine. Performs actual system fixes.
-
+**Governor** - Firestore Cloud Functions that:
 ## Quick Start
 
 ### Prerequisites

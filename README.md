@@ -1,21 +1,22 @@
-# TalentFlow
+# TalentFlow PRT: The Autonomous Service Mesh
 
-**Hyper-Local Student Freelancer Marketplace** - A Next.js 14 application connecting clients with verified student freelancers within a 5km radius.
+**Intent-Driven P2P Marketplace** - A Next.js 14 application where AI agents replace traditional search/filter UI to manage complex geospatial tasks, connecting clients with verified student freelancers within customizable radius.
 
 ## 🌟 Overview
 
-TalentFlow is a gig economy platform designed specifically for student freelancers. It features two task modes:
-
-- **Mode A (Immediate)**: First-come-first-served tasks with instant acceptance
-- **Mode B (Standard)**: Traditional proposal/bidding system
+TalentFlow PRT (Personalized Resource Tasker) is an evolution of the original TalentFlow platform, transitioning from a manual P2P marketplace to an **Agentic Dispatching System**. AI agents handle intent extraction, semantic matching, and automated negotiation to simplify the task of finding and dispatching freelancers.
 
 ### Key Features
 
-- 📍 **Geospatial Matching** - PostGIS-powered 5km radius task discovery
+- 🧠 **Intent-Driven Matching** - LLM-powered natural language understanding replaces traditional search
+- 🔍 **Hybrid Search** - PostGIS geospatial filtering + Azure AI Search semantic re-ranking
+- 🤖 **Autonomous Dispatcher** - Semantic Kernel orchestrates agentic workflows
+- 📍 **Geospatial Matching** - PostGIS-powered customizable radius task discovery
 - ⚡ **Real-time Updates** - Supabase Realtime for live task notifications
 - 🔐 **OTP Verification** - In-app 4-digit OTP for task start/end
 - 🎯 **Verification System** - Tiered commission (10% verified vs 50% unverified)
 - 🗺️ **Privacy-First Location** - Fuzzy location display before task acceptance
+- 🔒 **Circuit Breaker** - Fallback to keyword search if LLM intent parsing fails
 
 ---
 
@@ -41,12 +42,16 @@ npm install
 cp .env.local.example .env.local
 ```
 
-Edit `.env.local` with your Supabase credentials:
+Edit `.env.local` with your Supabase and Azure credentials:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+AZURE_AI_SEARCH_ENDPOINT=https://your-search-service.search.windows.net
+AZURE_AI_SEARCH_KEY=your-search-key
+AZURE_OPENAI_ENDPOINT=https://your-openai-resource.openai.azure.com
+AZURE_OPENAI_API_KEY=your-api-key
 ```
 
 ### 4. Enable Realtime (Important!)
@@ -83,17 +88,21 @@ talentflow/
 │   │   │       └── [taskId]/payment/ # Payment page (placeholder)
 │   │   ├── freelancer/               # Freelancer dashboard & pages
 │   │   │   ├── dashboard/page.tsx    # Active tasks & OTP verification
-│   │   │   ├── nearby-tasks/page.tsx # 5km radius task discovery
+│   │   │   ├── nearby-tasks/page.tsx # Radius-based task discovery
 │   │   │   ├── all-tasks/page.tsx    # All available tasks
 │   │   │   ├── applications/page.tsx # Mode B applications
 │   │   │   └── profile/page.tsx      # Freelancer profile & verification
 │   │   ├── messages/[chatId]/        # Real-time chat
 │   │   ├── api/                      # API Routes
-│   │   │   └── tasks/
-│   │   │       ├── nearby/route.ts   # Geospatial task query
-│   │   │       ├── accept/route.ts   # Race-safe task acceptance
-│   │   │       ├── status/route.ts   # Status transitions with OTP
-│   │   │       └── otp/route.ts      # OTP generation & verification
+│   │   │   ├── tasks/
+│   │   │   │   ├── nearby/route.ts   # Geospatial task query
+│   │   │   │   ├── accept/route.ts   # Race-safe task acceptance
+│   │   │   │   ├── status/route.ts   # Status transitions with OTP
+│   │   │   │   └── otp/route.ts      # OTP generation & verification
+│   │   │   ├── agent/                # Agentic orchestration
+│   │   │   │   └── route.ts          # Intent extraction & dispatching
+│   │   │   └── vector/               # Vector search
+│   │   │       └── route.ts          # Azure AI Search integration
 │   │   ├── globals.css               # Global styles
 │   │   ├── layout.tsx                # Root layout
 │   │   └── page.tsx                  # Landing page
@@ -120,13 +129,45 @@ talentflow/
 
 ---
 
+## 🧠 Agentic System Architecture
+
+### The "Brain" Loop
+
+1. **Intent Extraction**: LLM parses natural language (e.g., "Find a developer in Pune for 2 hours") into a structured JSON schema
+
+2. **Hybrid Retrieval**:
+   - **PostGIS**: Hard filter by radius (GIST index on location)
+   - **Azure AI Search**: Re-rank results based on semantic skill match (e.g., "React" vs. "Next.js")
+
+3. **Negotiation Agent**: Second agent loop checks the freelancer's "Trust Score" and "Current Load" before recommending
+
+### Orchestration
+
+- **Semantic Kernel (Python SDK)**: Main orchestrator managing agentic workflows
+- **Azure AI Search**: Hybrid vector + keyword search engine
+- **Azure OpenAI**: Intent extraction and negotiation agents
+- **Supabase/PostGIS**: Geospatial filtering and data storage
+
+---
+
+## 🚀 4-Phase Implementation Plan
+
+| Phase | Duration | Milestone | Technical Objective |
+|-------|----------|-----------|---------------------|
+| 1 | 2 Weeks | Knowledge Vectorization & RAG | Ingest all freelancer bios and 7 categories into Azure AI Search. Implement Hybrid Search (PostGIS + Vector). |
+| 2 | 3 Weeks | Reasoning Dispatcher Agent | Implement Semantic Kernel to replace standard search. Agent must extract "Intent" from natural language. |
+| 3 | 2 Weeks | Skill/Plugin Registry | Convert Supabase API routes into "Skills" that the Agent can call autonomously via Function Calling. |
+| 4 | 2 Weeks | Autonomous IDP | Deploy Azure OpenAI Vision to automate freelancer ID verification (HIPAA/Security-compliant logic). |
+
+---
+
 ## 🗄️ Database Schema
 
 ### Core Tables
 
 | Table | Description |
 |-------|-------------|
-| `profiles` | User profiles with verification status, location, skills |
+| `profiles` | User profiles with verification status, location, skills, bio, trust score, current load |
 | `tasks` | Task listings with mode, category, budget, geo_location |
 | `task_handshakes` | Mode A acceptance tracking (race condition safe) |
 | `task_applications` | Mode B proposals with portfolio links |
@@ -141,7 +182,7 @@ talentflow/
 
 | Function | Purpose |
 |----------|---------|
-| `find_nearby_tasks()` | PostGIS-powered 5km radius search |
+| `find_nearby_tasks()` | PostGIS-powered radius search |
 | `get_fuzzy_location()` | Privacy-preserving location offset (200m) |
 | `increment_completed_tasks()` | Update freelancer stats |
 | `update_freelancer_rating()` | Recalculate average rating |
@@ -155,68 +196,62 @@ talentflow/
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/tasks/nearby` | GET | Find tasks within 5km radius |
+| `/api/tasks/nearby` | GET | Find tasks within specified radius |
 | `/api/tasks/accept` | POST | Accept an immediate task (race-safe) |
 | `/api/tasks/status` | POST | Update task status with OTP validation |
 | `/api/tasks/otp` | POST | Generate 4-digit OTP |
 | `/api/tasks/otp` | GET | Verify OTP code |
 
+### Agentic API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/agent` | POST | Process natural language intent |
+| `/api/vector` | POST | Manage vector embeddings |
+| `/api/trust` | GET | Get freelancer trust scores |
+
 ### Example Requests
+
+**POST /api/agent**
+```json
+{
+  "intent": "Find a developer in Pune for 2 hours"
+}
+```
 
 **GET /api/tasks/nearby**
 ```
 GET /api/tasks/nearby?lat=28.6139&lng=77.2090&radius=5000
 ```
 
-**POST /api/tasks/accept**
-```json
-{
-  "taskId": "uuid-here"
-}
-```
-
-**POST /api/tasks/status**
-```json
-{
-  "taskId": "uuid-here",
-  "newStatus": "in_progress",
-  "otp": "1234"
-}
-```
-
-**POST /api/tasks/otp**
-```json
-{
-  "taskId": "uuid-here",
-  "otpType": "start"
-}
-```
-
 ---
 
 ## 📱 User Flows
 
-### Client Flow
+### Client Flow (Agentic)
 
 1. **Sign Up** → Select "Client" role
-2. **Create Task** → Choose Mode A (Immediate) or Mode B (Standard)
-3. **For Mode A**: Wait for freelancer to accept
-4. **For Mode B**: Review applications, select freelancer
-5. **Generate Start OTP** → Share with freelancer to begin
-6. **Generate End OTP** → Share when work is complete
-7. **Mark Complete & Pay** → Redirect to payment page
+2. **Describe Task** → Use natural language to describe your requirements
+3. **Intent Processing** → LLM extracts structured intent from your description
+4. **AI Matching** → System performs hybrid search and negotiation
+5. **Review Recommendations** → AI presents best matching freelancers
+6. **Approve & Dispatch** → Confirm selection and task is dispatched automatically
+7. **Generate Start OTP** → Share with freelancer to begin
+8. **Generate End OTP** → Share when work is complete
+9. **Mark Complete & Pay** → Redirect to payment page
 
 ### Freelancer Flow
 
 1. **Sign Up** → Select "Freelancer" role
-2. **Complete Profile** → Add skills, location
+2. **Complete Profile** → Add skills, location, and detailed bio
 3. **Verify Account** → Upload college ID (optional but recommended)
-4. **Find Tasks** → Browse nearby (5km) or all tasks
-5. **Accept Task** → Mode A: instant acceptance, Mode B: apply first
-6. **Get Start OTP** → Request from client, enter to start
-7. **Complete Work** → Get End OTP from client
-8. **Submit for Review** → Enter End OTP
-9. **Receive Payment** → After client marks complete
+4. **Profile Vectorization** → System automatically creates embedding for your bio
+5. **Receive Task Matches** → AI sends relevant task recommendations
+6. **Accept Task** → Mode A: instant acceptance, Mode B: apply first
+7. **Get Start OTP** → Request from client, enter to start
+8. **Complete Work** → Get End OTP from client
+9. **Submit for Review** → Enter End OTP
+10. **Receive Payment** → After client marks complete
 
 ---
 
@@ -271,6 +306,10 @@ All tables have RLS enabled with policies for:
 | **Storage** | Supabase Storage |
 | **Maps** | OpenStreetMap (no API key needed) |
 | **Payments** | Razorpay/Stripe (placeholder) |
+| **Orchestrator** | Semantic Kernel (Python SDK) |
+| **Vector Engine** | Azure AI Search (Hybrid: Vector + Keyword) |
+| **LLM** | Azure OpenAI |
+| **Validation** | Pydantic AI |
 
 ---
 
@@ -283,6 +322,8 @@ All services have generous free tiers:
 | **Supabase** | 50K MAU, 500MB DB, 1GB Storage, 2GB Bandwidth |
 | **Vercel** | 100GB bandwidth, unlimited deployments |
 | **OpenStreetMap** | Unlimited (no API key required) |
+| **Azure AI Search** | 5000 queries/day, 50MB storage |
+| **Azure OpenAI** | Free trial available |
 
 ---
 
@@ -299,14 +340,16 @@ npm run lint         # Run ESLint
 
 ## ✅ Implementation Status
 
-### Phase 1 - Foundation ✅
+### Current Implementation ✅
+
+#### Phase 1 - Foundation ✅
 - [x] Next.js 14 + TypeScript + Tailwind setup
 - [x] Database schema with PostGIS
 - [x] Authentication flow (signup, login, logout)
 - [x] Basic UI components
 - [x] Utility functions (geo, safety, otp, commission)
 
-### Phase 2 - Core Features ✅
+#### Phase 2 - Core Features ✅
 - [x] Task creation (Mode A + Mode B)
 - [x] Geospatial query engine with PostGIS
 - [x] Nearby task discovery (5km radius)
@@ -315,30 +358,49 @@ npm run lint         # Run ESLint
 - [x] Fuzzy location display (privacy)
 - [x] Race condition handling for task acceptance
 
-### Phase 3 - Task Management ✅
+#### Phase 3 - Task Management ✅
 - [x] Task status transitions (open → assigned → in_progress → review → completed)
 - [x] OTP generation and verification (4-digit)
 - [x] Client dashboard with task management
 - [x] Freelancer dashboard with active tasks
 - [x] Payment page redirect (placeholder)
 
-### Phase 4 - Chat & Messaging 🔄
+#### Phase 4 - Chat & Messaging 🔄
 - [x] Chat UI implementation
 - [x] Safety filtering for messages
 - [ ] Real-time message delivery (needs integration)
 
-### Phase 5 - Verification & Safety 🔄
+#### Phase 5 - Verification & Safety 🔄
 - [x] Verification UI on profile page
 - [x] SOS alerts schema
 - [ ] Document upload for verification
 - [ ] SOS button functionality
 
-### Phase 6 - Payments & Reviews 🔄
+#### Phase 6 - Payments & Reviews 🔄
 - [x] Payment page UI (placeholder)
 - [x] Commission calculation logic
 - [ ] Razorpay/Stripe integration
 - [ ] Escrow system
 - [ ] Review system
+
+### Planned Agentic Features 🔄
+
+#### Phase 1 - Knowledge Vectorization & RAG (In Progress)
+- [ ] Ingest freelancer bios and categories into Azure AI Search
+- [ ] Implement Hybrid Search (PostGIS + Vector)
+
+#### Phase 2 - Reasoning Dispatcher Agent
+- [ ] Implement Semantic Kernel for orchestration
+- [ ] Build intent extraction from natural language
+- [ ] Develop negotiation agent for trust/load checking
+
+#### Phase 3 - Execution Skill/Plugin Registry
+- [ ] Convert Supabase API routes into Semantic Kernel Skills
+- [ ] Implement function calling for autonomous task execution
+
+#### Phase 4 - Governance Autonomous IDP
+- [ ] Deploy Azure OpenAI Vision for automated ID verification
+- [ ] Implement HIPAA/Security-compliant logic
 
 ---
 

@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 
 // Task status transitions
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -17,22 +16,10 @@ export async function POST(request: Request) {
   try {
     const supabase = createServerSupabaseClient()
     
-    // Get the authorization header or cookies
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get('sb-access-token')?.value ||
-                        cookieStore.get('supabase-auth-token')?.value
+    // Get user from the session
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    // Get user from the access token in the request
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '') || accessToken
-    
-    let user = null
-    if (token) {
-      const { data } = await supabase.auth.getUser(token)
-      user = data.user
-    }
-    
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
