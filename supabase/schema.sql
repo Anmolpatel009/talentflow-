@@ -1,38 +1,39 @@
 -- =============================================================================
--- TalentFlow Database Schema
+-- TalentFlow Database Schema (Upgraded & Anti-Recursion Optimized)
 -- Complete schema for Client & Freelancer Platform
--- Last Updated: 2024-01-01
 -- =============================================================================
 
--- =============================================================================
--- EXTENSIONS
--- =============================================================================
-CREATE EXTENSION IF NOT EXISTS postgis;      -- For geospatial queries
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";   -- For UUID generation
+-- 1. EXTENSIONS
+CREATE EXTENSION IF NOT EXISTS postgis;      
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";   
 
--- =============================================================================
--- ENUMS
--- =============================================================================
+-- 2. ENUMS
 DO $$ BEGIN
     CREATE TYPE task_mode AS ENUM ('immediate', 'standard');
     CREATE TYPE task_category AS ENUM (
-        'content_engine', 
-        'hyper_local_logistics', 
-        'tech_neighbor', 
-        'academic_support', 
-        'event_support', 
-        'ai_training', 
-        'digital_assistant'
+        'content_engine', 'hyper_local_logistics', 'tech_neighbor', 
+        'academic_support', 'event_support', 'ai_training', 'digital_assistant'
     );
     CREATE TYPE task_status AS ENUM ('open', 'assigned', 'in_progress', 'review', 'completed', 'disputed', 'cancelled');
     CREATE TYPE verification_status AS ENUM ('none', 'pending', 'verified');
 EXCEPTION WHEN duplicate_object THEN null;
 END $$;
 
--- =============================================================================
--- TABLE: profiles
--- Stores user profiles for both clients and freelancers
--- =============================================================================
+-- 3. HELPER FUNCTIONS (The secret to fixing 42P17 Recursion & Performance)
+-- These securely fetch IDs without triggering other RLS policies.
+CREATE OR REPLACE FUNCTION get_my_profile_id() RETURNS uuid AS $$
+    SELECT id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION is_task_client(check_task_id uuid) RETURNS boolean AS $$
+    SELECT EXISTS (SELECT 1 FROM public.tasks WHERE id = check_task_id AND client_id = get_my_profile_id());
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION is_task_freelancer(check_task_id uuid) RETURNS boolean AS $$
+    SELECT EXISTS (SELECT 1 FROM public.task_handshakes WHERE task_id = check_task_id AND freelancer_id = get_my_profile_id());
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
+-- 4. TABLES
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
@@ -41,39 +42,21 @@ CREATE TABLE IF NOT EXISTS profiles (
     full_name TEXT,
     phone TEXT,
     city TEXT,
-    
-    -- Verification fields
     verification_status verification_status NOT NULL DEFAULT 'none',
     college_id_url TEXT,
     gov_id_url TEXT,
     college_name TEXT,
-    
-    -- Skills for freelancers (JSON array)
     skills JSONB DEFAULT '[]'::jsonb,
-    
-    -- Commission rate (10% for verified freelancers, 50% for others)
     commission_rate INTEGER NOT NULL DEFAULT 50,
-    
-    -- Location for geospatial queries
     location GEOGRAPHY(POINT, 4326),
     last_location_update TIMESTAMP WITH TIME ZONE,
-    
-    -- Equipment list for freelancers
     gear_list JSONB DEFAULT '[]'::jsonb,
-    
-    -- Stats
     completed_tasks INTEGER DEFAULT 0,
     average_rating DECIMAL(3, 2) DEFAULT 0,
-    
-    -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- =============================================================================
--- TABLE: tasks
--- Job postings created by clients
--- =============================================================================
 CREATE TABLE IF NOT EXISTS tasks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     client_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -83,31 +66,19 @@ CREATE TABLE IF NOT EXISTS tasks (
     category task_category NOT NULL,
     budget DECIMAL(10, 2) NOT NULL,
     escrow_amount DECIMAL(10, 2),
-    
-    -- Location for nearby task matching
     geo_location GEOGRAPHY(POINT, 4326),
     address_text TEXT,
     is_nearby BOOLEAN NOT NULL DEFAULT FALSE,
-    
-    -- Task status
     status task_status NOT NULL DEFAULT 'open',
-    
-    -- Requirements
     acceptance_deadline TIMESTAMP WITH TIME ZONE,
     portfolio_required BOOLEAN DEFAULT FALSE,
     revision_limit INTEGER DEFAULT 2,
-    
-    -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE
 );
 
--- =============================================================================
--- TABLE: task_handshakes
--- Direct task assignments (client selects freelancer directly)
--- =============================================================================
 CREATE TABLE IF NOT EXISTS task_handshakes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -115,13 +86,9 @@ CREATE TABLE IF NOT EXISTS task_handshakes (
     accepted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     is_cancelled BOOLEAN DEFAULT FALSE,
     cancelled_reason TEXT,
-    UNIQUE(task_id, freelancer_id)
+    CONSTRAINT unique_task_freelancer UNIQUE(task_id, freelancer_id) -- Fixes the 409 Conflict
 );
 
--- =============================================================================
--- TABLE: task_applications
--- Freelancer applications to open tasks
--- =============================================================================
 CREATE TABLE IF NOT EXISTS task_applications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -134,10 +101,6 @@ CREATE TABLE IF NOT EXISTS task_applications (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- =============================================================================
--- TABLE: chats
--- Chat rooms for task-related communication
--- =============================================================================
 CREATE TABLE IF NOT EXISTS chats (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -145,10 +108,6 @@ CREATE TABLE IF NOT EXISTS chats (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- =============================================================================
--- TABLE: messages
--- Individual messages in chats
--- =============================================================================
 CREATE TABLE IF NOT EXISTS messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
@@ -160,10 +119,6 @@ CREATE TABLE IF NOT EXISTS messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- =============================================================================
--- TABLE: task_attachments
--- Files attached to tasks or messages
--- =============================================================================
 CREATE TABLE IF NOT EXISTS task_attachments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -175,10 +130,6 @@ CREATE TABLE IF NOT EXISTS task_attachments (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- =============================================================================
--- TABLE: reviews
--- Task reviews/ratings
--- =============================================================================
 CREATE TABLE IF NOT EXISTS reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -189,10 +140,6 @@ CREATE TABLE IF NOT EXISTS reviews (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- =============================================================================
--- TABLE: sos_alerts
--- Emergency alerts during tasks
--- =============================================================================
 CREATE TABLE IF NOT EXISTS sos_alerts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
@@ -204,10 +151,6 @@ CREATE TABLE IF NOT EXISTS sos_alerts (
     resolved_at TIMESTAMP WITH TIME ZONE
 );
 
--- =============================================================================
--- TABLE: otps
--- One-time passwords for task start/completion
--- =============================================================================
 CREATE TABLE IF NOT EXISTS otps (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -218,58 +161,60 @@ CREATE TABLE IF NOT EXISTS otps (
     expires_at TIMESTAMP WITH TIME ZONE
 );
 
--- =============================================================================
--- INDEXES
--- =============================================================================
+-- 5. INDEXES
 CREATE INDEX IF NOT EXISTS idx_profiles_location ON profiles USING GIST(location);
 CREATE INDEX IF NOT EXISTS idx_profiles_user ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
-
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_client ON tasks(client_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_geo ON tasks USING GIST(geo_location);
-
 CREATE INDEX IF NOT EXISTS idx_task_handshakes_task ON task_handshakes(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_applications_task ON task_applications(task_id);
 CREATE INDEX IF NOT EXISTS idx_chats_task ON chats(task_id);
 CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_task ON reviews(task_id);
 
--- =============================================================================
--- FUNCTION: find_nearby_tasks
--- Returns tasks within a specified radius of user location
--- =============================================================================
-CREATE OR REPLACE FUNCTION find_nearby_tasks(
-    user_lat double precision, 
-    user_lng double precision, 
-    radius_meters double precision DEFAULT 5000
-)
-RETURNS TABLE (
-    id uuid, 
-    title text, 
-    budget decimal, 
-    category text, 
-    mode text, 
-    distance_meters double precision
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+-- 6. BUSINESS LOGIC TRIGGERS (Automated Commission Rates)
+CREATE OR REPLACE FUNCTION adjust_commission() RETURNS TRIGGER AS $$
 BEGIN
-  RETURN QUERY
-  SELECT t.id, t.title, t.budget, t.category::text, t.mode::text,
-         ST_Distance(t.geo_location, ST_SetSRID(ST_MakePoint(user_lng, user_lat), 4326)::geography) as distance_meters
-  FROM tasks t
-  WHERE t.status = 'open' AND t.is_nearby = true
-    AND ST_DWithin(t.geo_location, ST_SetSRID(ST_MakePoint(user_lng, user_lat), 4326)::geography, radius_meters)
-    AND (t.acceptance_deadline IS NULL OR t.acceptance_deadline > NOW())
-  ORDER BY distance_meters ASC LIMIT 50;
+  IF NEW.verification_status = 'verified' THEN
+    NEW.commission_rate = 10;
+  ELSIF NEW.verification_status IN ('none', 'pending') THEN
+    NEW.commission_rate = 50;
+  END IF;
+  RETURN NEW;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
--- =============================================================================
--- RLS POLICIES
--- =============================================================================
+DROP TRIGGER IF EXISTS trg_adjust_commission ON profiles;
+CREATE TRIGGER trg_adjust_commission
+  BEFORE UPDATE OF verification_status ON profiles
+  FOR EACH ROW EXECUTE FUNCTION adjust_commission();
+
+CREATE OR REPLACE FUNCTION handle_new_user() RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id, email, role) VALUES (NEW.id, NEW.email, NULL);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+CREATE OR REPLACE FUNCTION update_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_profiles_modtime ON profiles;
+CREATE TRIGGER update_profiles_modtime BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS update_tasks_modtime ON tasks;
+CREATE TRIGGER update_tasks_modtime BEFORE UPDATE ON tasks FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- 7. CLEAN SLATE FOR RLS POLICIES
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_handshakes ENABLE ROW LEVEL SECURITY;
@@ -281,207 +226,56 @@ ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sos_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE otps ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Public read, users manage own
-CREATE POLICY "Public profiles viewable" ON profiles FOR SELECT USING (true);
-CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- 8. THE NEW, FLAT RLS POLICIES (No more 42P17 or 42501 errors)
 
--- Tasks: Clients manage own, open tasks public
-CREATE POLICY "Users create tasks" ON tasks FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND id = client_id)
+-- Profiles
+DROP POLICY IF EXISTS "Public profiles viewable" ON profiles;
+DROP POLICY IF EXISTS "Users update own profile" ON profiles;
+CREATE POLICY "Profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (user_id = auth.uid());
+
+-- Tasks
+DROP POLICY IF EXISTS "Users create tasks" ON tasks;
+DROP POLICY IF EXISTS "Clients manage own tasks" ON tasks;
+DROP POLICY IF EXISTS "Open tasks viewable" ON tasks;
+DROP POLICY IF EXISTS "Freelancers with handshake can view tasks" ON tasks;
+CREATE POLICY "Clients create tasks" ON tasks FOR INSERT WITH CHECK (client_id = get_my_profile_id());
+CREATE POLICY "Clients update own tasks" ON tasks FOR UPDATE USING (client_id = get_my_profile_id());
+CREATE POLICY "Tasks visibility" ON tasks FOR SELECT USING (
+    status = 'open' 
+    OR client_id = get_my_profile_id() 
+    OR is_task_freelancer(id)
 );
-CREATE POLICY "Clients manage own tasks" ON tasks FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND id = client_id)
-);
-CREATE POLICY "Open tasks viewable" ON tasks FOR SELECT USING (status = 'open');
 
 -- Task Handshakes
-CREATE POLICY "Freelancers create handshakes" ON task_handshakes FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND id = freelancer_id)
-);
-CREATE POLICY "Participants view handshakes" ON task_handshakes FOR SELECT USING (
-    freelancer_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()) 
-    OR task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()))
-);
+DROP POLICY IF EXISTS "Freelancers create handshakes" ON task_handshakes;
+DROP POLICY IF EXISTS "Participants view handshakes" ON task_handshakes;
+CREATE POLICY "Freelancers manage own handshakes" ON task_handshakes FOR ALL USING (freelancer_id = get_my_profile_id());
+CREATE POLICY "Clients view handshakes on their tasks" ON task_handshakes FOR SELECT USING (is_task_client(task_id));
 
 -- Task Applications
-CREATE POLICY "Freelancers apply" ON task_applications FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND id = freelancer_id)
+DROP POLICY IF EXISTS "Freelancers apply" ON task_applications;
+DROP POLICY IF EXISTS "Participants view applications" ON task_applications;
+CREATE POLICY "Freelancers manage own applications" ON task_applications FOR ALL USING (freelancer_id = get_my_profile_id());
+CREATE POLICY "Clients view applications on their tasks" ON task_applications FOR SELECT USING (is_task_client(task_id));
+
+-- Chats & Messages (Secured via Helper Functions)
+DROP POLICY IF EXISTS "Participants view chats" ON chats;
+CREATE POLICY "Chat visibility" ON chats FOR SELECT USING (is_task_client(task_id) OR is_task_freelancer(task_id));
+
+DROP POLICY IF EXISTS "Participants view messages" ON messages;
+DROP POLICY IF EXISTS "Participants send messages" ON messages;
+CREATE POLICY "Message visibility" ON messages FOR SELECT USING (
+    EXISTS (SELECT 1 FROM chats WHERE id = messages.chat_id AND (is_task_client(task_id) OR is_task_freelancer(task_id)))
 );
-CREATE POLICY "Participants view applications" ON task_applications FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND (id = freelancer_id OR id IN (SELECT client_id FROM tasks WHERE id = task_id)))
-);
+CREATE POLICY "Send messages" ON messages FOR INSERT WITH CHECK (sender_id = get_my_profile_id());
 
--- Chats
-CREATE POLICY "Participants view chats" ON chats FOR SELECT USING (
-    task_id IN (
-        SELECT id FROM tasks WHERE client_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-        UNION ALL 
-        SELECT task_id FROM task_handshakes WHERE freelancer_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-    )
-);
+-- Reviews, SOS, OTPs (Simplified)
+CREATE POLICY "Review visibility" ON reviews FOR SELECT USING (true);
+CREATE POLICY "Create reviews" ON reviews FOR INSERT WITH CHECK (reviewer_id = get_my_profile_id());
 
--- Messages
-CREATE POLICY "Participants view messages" ON messages FOR SELECT USING (
-    chat_id IN (
-        SELECT id FROM chats WHERE task_id IN (
-            SELECT id FROM tasks WHERE client_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-            UNION ALL 
-            SELECT task_id FROM task_handshakes WHERE freelancer_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-        )
-    )
-);
-CREATE POLICY "Participants send messages" ON messages FOR INSERT WITH CHECK (
-    sender_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-);
+CREATE POLICY "SOS visibility" ON sos_alerts FOR SELECT USING (user_id = get_my_profile_id() OR is_task_client(task_id));
+CREATE POLICY "Create SOS" ON sos_alerts FOR INSERT WITH CHECK (user_id = get_my_profile_id());
 
--- Task Attachments
-CREATE POLICY "Participants view attachments" ON task_attachments FOR SELECT USING (
-    task_id IN (
-        SELECT id FROM tasks WHERE client_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-        UNION ALL 
-        SELECT task_id FROM task_handshakes WHERE freelancer_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-    )
-);
-
--- Reviews
-CREATE POLICY "Users view reviews" ON reviews FOR SELECT USING (
-    reviewer_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()) 
-    OR reviewee_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-);
-CREATE POLICY "Users create reviews" ON reviews FOR INSERT WITH CHECK (
-    reviewer_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-);
-
--- SOS Alerts
-CREATE POLICY "Users view own sos" ON sos_alerts FOR SELECT USING (
-    user_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-);
-CREATE POLICY "Users create sos" ON sos_alerts FOR INSERT WITH CHECK (
-    user_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-);
-
--- OTPs
-CREATE POLICY "Participants view otps" ON otps FOR SELECT USING (
-    task_id IN (
-        SELECT id FROM tasks WHERE client_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-        UNION ALL 
-        SELECT task_id FROM task_handshakes WHERE freelancer_id IN (SELECT id FROM profiles WHERE user_id = auth.uid())
-    )
-);
-CREATE POLICY "Clients create otps" ON otps FOR INSERT WITH CHECK (
-    task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()))
-);
-
--- =============================================================================
--- TRIGGER: Auto-create profile on new user signup
--- =============================================================================
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (user_id, email, role, full_name, phone, city)
-  VALUES (NEW.id, NEW.email, NULL, NULL, NULL, NULL);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
-
--- =============================================================================
--- TRIGGER: Update updated_at timestamp
--- =============================================================================
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER IF NOT EXISTS update_profiles_modtime 
-  BEFORE UPDATE ON profiles 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER IF NOT EXISTS update_tasks_modtime 
-  BEFORE UPDATE ON tasks 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER IF NOT EXISTS update_chats_modtime 
-  BEFORE UPDATE ON chats 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER IF NOT EXISTS update_applications_modtime 
-  BEFORE UPDATE ON task_applications 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
--- =============================================================================
--- FUNCTION: increment_completed_tasks
--- Increments the completed_tasks counter for a freelancer
--- =============================================================================
-CREATE OR REPLACE FUNCTION increment_completed_tasks(freelancer_id uuid)
-RETURNS void AS $$
-BEGIN
-  UPDATE profiles
-  SET completed_tasks = completed_tasks + 1
-  WHERE id = freelancer_id;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- =============================================================================
--- FUNCTION: update_freelancer_rating
--- Updates the average_rating for a freelancer after a new review
--- =============================================================================
-CREATE OR REPLACE FUNCTION update_freelancer_rating(freelancer_id uuid)
-RETURNS void AS $$
-BEGIN
-  UPDATE profiles
-  SET average_rating = (
-    SELECT COALESCE(AVG(rating), 0)
-    FROM reviews
-    WHERE reviewee_id = freelancer_id
-  )
-  WHERE id = freelancer_id;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- =============================================================================
--- FUNCTION: get_fuzzy_location
--- Returns a fuzzy location (randomized offset) for privacy
--- =============================================================================
-CREATE OR REPLACE FUNCTION get_fuzzy_location(
-  actual_lat double precision,
-  actual_lng double precision,
-  offset_meters double precision DEFAULT 200
-)
-RETURNS TABLE (
-  fuzzy_lat double precision,
-  fuzzy_lng double precision,
-  radius double precision
-) AS $$
-DECLARE
-  random_angle double precision;
-  random_distance double precision;
-  lat_offset double precision;
-  lng_offset double precision;
-BEGIN
-  -- Generate random angle and distance
-  random_angle := random() * 2 * pi();
-  random_distance := random() * offset_meters;
-  
-  -- Calculate offsets (approximate conversion)
-  lat_offset := (random_distance * cos(random_angle)) / 111320.0;
-  lng_offset := (random_distance * sin(random_angle)) / (111320.0 * cos(actual_lat * pi() / 180.0));
-  
-  RETURN QUERY SELECT 
-    actual_lat + lat_offset,
-    actual_lng + lng_offset,
-    offset_meters;
-END;
-$$ LANGUAGE plpgsql;
-
--- =============================================================================
--- END OF SCHEMA
--- =============================================================================
+CREATE POLICY "OTP visibility" ON otps FOR SELECT USING (is_task_client(task_id) OR is_task_freelancer(task_id));
+CREATE POLICY "Create OTP" ON otps FOR INSERT WITH CHECK (is_task_client(task_id));

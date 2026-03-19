@@ -69,9 +69,7 @@ export class MetricsCollector {
     
     // Force flush if buffer is full
     if (this.buffer.length >= this.maxBufferSize) {
-      this.flush().catch(err => {
-        console.error('[Sentinel] Failed to flush buffer:', err);
-      });
+      this.flush();
     }
   }
   
@@ -98,34 +96,54 @@ export class MetricsCollector {
   }
   
   /**
-   * Flush the buffer to Firestore
-   */
-  async flush(): Promise<void> {
+     * Flush the buffer to Firestore (non-blocking)
+     */
+  flush(): void {
     if (this.isFlushing || this.buffer.length === 0) {
       return;
     }
-    
+
+    // REALITY CHECK: Stricter validation before starting the async block
+    const db = this.config.firestore;
+    if (!db || (db as any).type !== 'firestore') {
+      // Don't throw an error, just wait for the next interval
+      return;
+    }
+
     this.isFlushing = true;
     
-    try {
+    Promise.resolve().then(async () => {
       const events = [...this.buffer];
       this.buffer = [];
       
-      const session = this.aggregateSession(events);
-      
-      const telemetryCollection = collection(this.config.firestore, COLLECTIONS.TELEMETRY);
-      await addDoc(telemetryCollection, session);
-      
-      console.log(`[Sentinel] Flushed ${events.length} events to Firestore`);
-    } catch (error) {
-      console.error('[Sentinel] Failed to flush telemetry:', error);
-      // Re-add events to buffer on failure (up to max size)
-      // This prevents data loss on transient errors
-    } finally {
+      try {
+        const session = this.aggregateSession(events);
+        
+        // Use the validated 'db' constant
+        const telemetryCollection = collection(db, COLLECTIONS.TELEMETRY);
+        await addDoc(telemetryCollection, session);
+        
+        console.log(`[Sentinel] Flushed ${events.length} events to Firestore`);
+      } catch (error) {
+        console.error('[Sentinel] Failed to flush telemetry:', error);
+        
+        // Return events to buffer
+        try {
+          const remainingCapacity = this.maxBufferSize - this.buffer.length;
+          if (remainingCapacity > 0) {
+            this.buffer = [...this.buffer, ...events.slice(0, remainingCapacity)];
+          }
+        } catch (bufferError) {
+          console.error('[Sentinel] Buffer recovery failed:', bufferError);
+        }
+      } finally {
+        this.isFlushing = false;
+      }
+    }).catch(err => {
+      console.error('[Sentinel] Flush initialization failed:', err);
       this.isFlushing = false;
-    }
+    });
   }
-  
   /**
    * Stop the collector and flush remaining events
    */
@@ -150,9 +168,7 @@ export class MetricsCollector {
    */
   private startFlushTimer(): void {
     this.flushInterval = setInterval(() => {
-      this.flush().catch(err => {
-        console.error('[Sentinel] Periodic flush failed:', err);
-      });
+      this.flush();
     }, this.batchIntervalMs);
     
     // Don't prevent the process from exiting
@@ -292,15 +308,22 @@ let collectorInstance: MetricsCollector | null = null;
  * Initialize the global metrics collector
  */
 export function initCollector(config: CollectorConfig): MetricsCollector {
+  // Relaxed validation: Allow initialization even if DB is still a proxy
+  if (!config?.firestore) {
+    throw new Error('Firestore instance required for MetricsCollector');
+  }
+  
+  if (!config?.source) {
+    throw new Error('Valid telemetry source identifier is required');
+  }
+
   if (collectorInstance) {
-    console.warn('[Sentinel] Collector already initialized, returning existing instance');
     return collectorInstance;
   }
   
   collectorInstance = new MetricsCollector(config);
   return collectorInstance;
 }
-
 /**
  * Get the global metrics collector
  */

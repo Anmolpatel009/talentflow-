@@ -15,82 +15,68 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  console.log("Supabase URL Check:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   const supabase = createClient()
   const { showToast } = useToastContext()
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      console.log('🔐 Attempting login with:', email)
-
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        console.error('❌ Login error:', error)
-        if (error.message.includes('Failed to fetch') || error.message.includes('Network') || error.message.includes('timeout')) {
-          showToast('error', 'Network connection error. Please check your internet connection and try again.')
-        } else {
-          showToast('error', error.message)
-        }
+      if (loginError) {
+        showToast('error', loginError.message)
         return
       }
 
-      // Use user from sign-in response
       const user = signInData.user
-      
-      if (user) {
-        console.log('✅ Login successful for user:', user.id)
-        
-        const { data: profile, error: profileError } = await supabase
+      if (!user) return
+
+      // 1. Get role with a safe fallback
+      let role = user.user_metadata?.role
+
+      if (!role) {
+        // Safe database fetch - we check both 'id' and 'user_id' possibilities
+        const { data: profile } = await supabase
           .from('profiles')
           .select('role')
-          .eq('user_id', user.id)
+          .or(`id.eq.${user.id},user_id.eq.${user.id}`) 
           .single()
-
-        // Determine redirect path
-        let redirectPath = '/client/dashboard'
-        if (profileError) {
-          console.warn('⚠️ Profile not found:', profileError)
-          // Profile might not exist, use role from user metadata
-          const role = user.user_metadata?.role || 'client'
-          redirectPath = role === 'freelancer' ? '/freelancer/dashboard' : '/client/dashboard'
-        } else if (profile?.role === 'freelancer') {
-          redirectPath = '/freelancer/dashboard'
-        }
-
-        // Show success toast and redirect
-        showToast('success', 'Login successful! Redirecting...')
         
-        // Use Next.js router for proper navigation
-        router.push(redirectPath)
+        role = profile?.role
       }
-    } catch (err: any) {
-      console.error('🚨 Unexpected login error:', err)
-      console.error('🚨 Error details:', {
-        message: err.message,
-        name: err.name,
-        stack: err.stack,
-        cause: err.cause
-      })
+
+      // 2. If STILL no role, we cannot redirect to a protected dashboard.
+      // We must send them to a role-selection page or show an error.
+      if (!role) {
+        console.error("User exists but has no role assigned.")
+        showToast('error', "No role assigned to this account.")
+        // Optional: window.location.href = '/auth/role-selection'
+        return
+      }
+
+      const targetPath = role === 'client' ? '/client/dashboard' : '/freelancer/dashboard'
       
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('Network') || err.message?.includes('timeout')) {
-        showToast('error', 'Network connection error. Please check your internet connection and try again.')
-      } else {
-        showToast('error', `An unexpected error occurred: ${err.message}`)
-      }
+      // 3. The "Nuclear" Redirect 
+      // Instead of Next.js router, we use a clean break to bypass client-side crashes.
+      showToast('success', 'Login successful!')
+      
+      // We force a small delay so the user sees the toast and the cookie stabilizes
+   // Inside handleLogin after success
+setTimeout(() => {
+  window.location.replace(targetPath);
+}, 200);
+    } catch (err: any) {
+      console.error('Runtime Error during login:', err)
+      setError("A system error occurred. Check browser console.")
     } finally {
       setLoading(false)
     }
   }
-
-
 
   return (
     <div className="min-h-screen flex">
@@ -222,8 +208,6 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-
-
 
           {/* Sign Up Link */}
           <p className="text-center text-sm text-muted-foreground mt-8">

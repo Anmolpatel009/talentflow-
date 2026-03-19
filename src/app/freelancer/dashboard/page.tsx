@@ -35,8 +35,12 @@ interface Task {
 }
 
 interface Handshake {
+  id: string
   task_id: string
+  freelancer_id: string
   accepted_at: string
+  is_cancelled: boolean
+  cancelled_reason: string | null
   task?: Task
 }
 
@@ -106,13 +110,14 @@ export default function FreelancerDashboard() {
 
   const fetchTasks = useCallback(async (profileId: string) => {
     try {
+      console.log('Fetching tasks for profile:', profileId)
       const { data, error } = await supabase
         .from('task_handshakes')
         .select(`
           *,
-          task:tasks (
+          tasks (
             *,
-            client:client_id (
+            client_id (
               full_name,
               city,
               phone
@@ -123,8 +128,21 @@ export default function FreelancerDashboard() {
         .eq('is_cancelled', false)
         .order('accepted_at', { ascending: false })
 
-      if (error) throw error
-      setTasks(data || [])
+      if (error) {
+        console.error('Supabase error fetching tasks:', error)
+        throw error
+      }
+      
+      console.log('Fetched tasks raw data:', data)
+      
+      // Fix the data structure to ensure consistency with the interface
+      const formattedData = data.map(handshake => ({
+        ...handshake,
+        task: handshake.tasks || null
+      }))
+      
+      console.log('Formatted tasks data:', formattedData)
+      setTasks(formattedData || [])
     } catch (error) {
       console.error('Error fetching tasks:', error)
     } finally {
@@ -147,7 +165,7 @@ export default function FreelancerDashboard() {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'task_handshakes' },
+        { event: '*', schema: 'public', table: 'task_handshakes' },
         () => fetchTasks(profile.id)
       )
       .subscribe((status: string) => {
@@ -174,30 +192,33 @@ export default function FreelancerDashboard() {
 
   const checkUser = async () => {
     try {
+      // 1. Get the Auth User (The 98be... ID)
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
         router.push('/auth/login')
         return
       }
-
-      const { data: profileData } = await supabase
+  
+      // 2. Fetch the actual Profile record (The 54fe... ID)
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, email, verification_status')
         .eq('user_id', user.id)
         .single()
-
-      if (profileData?.role && profileData.role !== 'freelancer') {
-        router.push('/client/dashboard')
+  
+      if (profileError || !profileData) {
+        console.error("Profile not found for this user")
         return
       }
-
+  
+      // 3. Update state and fetch tasks using the PROFILE ID
       setUser(user)
-      setProfile(profileData)
-      fetchTasks(profileData.id)
+      setProfile(profileData) 
+      fetchTasks(profileData.id) // <--- THIS is the 54fe... ID the DB wants
+  
     } catch (error) {
-      console.error('Error:', error)
-      router.push('/auth/login')
+      console.error('Logic Error:', error)
     }
   }
 
@@ -587,7 +608,7 @@ export default function FreelancerDashboard() {
               <div className="divide-y divide-border">
                 {activeTasks.map((handshake, index) => (
                   <div
-                    key={handshake.task_id}
+                    key={handshake.id}
                     className="p-6 hover:bg-muted/30 transition-colors animate-fade-in-up"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
@@ -711,7 +732,7 @@ export default function FreelancerDashboard() {
               <div className="divide-y divide-border">
                 {completedTasks.map((handshake, index) => (
                   <div
-                    key={handshake.task_id}
+                    key={handshake.id}
                     className="p-6 hover:bg-muted/30 transition-colors animate-fade-in-up"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >

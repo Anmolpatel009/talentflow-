@@ -54,23 +54,27 @@ export default function ClientDashboard() {
   const supabase = createClient()
 
   const fetchTasks = useCallback(async (profileId: string) => {
+    if (!profileId) return; // Reality check: don't fetch without an ID
+    
+    setLoading(true);
     try {
+      // 1. Fetch only tasks where THIS client is the owner
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('client_id', profileId)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      setTasks(data || [])
-
+        .eq('client_id', profileId) // Crucial: Filter by the Profile ID, not Auth ID
+        .order('created_at', { ascending: false });
+  
+      if (error) throw error;
+      setTasks(data || []);
+  
+      // 2. Extract IDs for tasks that have a freelancer assigned
       const assignedTaskIds = (data || [])
         .filter(t => ['assigned', 'in_progress', 'review'].includes(t.status))
-        .map(t => t.id)
-
+        .map(t => t.id);
+  
       if (assignedTaskIds.length > 0) {
-        const { data: handshakeData } = await supabase
+        const { data: handshakeData, error: handshakeError } = await supabase
           .from('task_handshakes')
           .select(`
             task_id,
@@ -81,22 +85,24 @@ export default function ClientDashboard() {
             )
           `)
           .in('task_id', assignedTaskIds)
-          .eq('is_cancelled', false)
-
+          .eq('is_cancelled', false);
+  
+        if (handshakeError) throw handshakeError;
+  
         if (handshakeData) {
-          const handshakeMap: Record<string, Handshake> = {}
+          const handshakeMap: Record<string, Handshake> = {};
           handshakeData.forEach((h: any) => {
-            handshakeMap[h.task_id] = h
-          })
-          setHandshakes(handshakeMap)
+            handshakeMap[h.task_id] = h;
+          });
+          setHandshakes(handshakeMap);
         }
       }
     } catch (error) {
-      console.error('Error fetching tasks:', error)
+      console.error('Error fetching tasks:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [supabase])
+  }, [supabase]);
 
   useEffect(() => {
     checkUser()

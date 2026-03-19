@@ -25,6 +25,7 @@ interface Task {
   budget: number
   created_at: string
   portfolio_required: boolean
+  status: string
   client?: {
     full_name: string
     average_rating: number
@@ -99,7 +100,6 @@ export default function AllTasksPage() {
             city
           )
         `)
-        .eq('status', 'open')
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -168,6 +168,19 @@ export default function AllTasksPage() {
     return mode === 'immediate' 
       ? 'bg-orange-100 text-orange-800' 
       : 'bg-blue-100 text-blue-800'
+  }
+
+  const getStatusColor = (status: string) => {
+    const statusColors: Record<string, string> = {
+      'open': 'bg-blue-100 text-blue-800',
+      'assigned': 'bg-yellow-100 text-yellow-800',
+      'in_progress': 'bg-green-100 text-green-800',
+      'review': 'bg-purple-100 text-purple-800',
+      'completed': 'bg-gray-100 text-gray-800',
+      'cancelled': 'bg-red-100 text-red-800',
+      'disputed': 'bg-orange-100 text-orange-800'
+    }
+    return statusColors[status] || 'bg-gray-100 text-gray-800'
   }
 
   if (loading) {
@@ -260,6 +273,9 @@ export default function AllTasksPage() {
                         📁 Portfolio
                       </span>
                     )}
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                      {task.status}
+                    </span>
                   </div>
                   <span className="text-sm text-gray-500">
                     {new Date(task.created_at).toLocaleDateString()}

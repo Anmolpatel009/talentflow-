@@ -6,45 +6,42 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
-  // Refresh session if expired - required for Server Components
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // 1. Refresh session - Crucial for Server Components
+  const { data: { session } } = await supabase.auth.getSession()
 
-  // Optional: Protect routes based on auth status
-  // const isAuthPage = req.nextUrl.pathname.startsWith('/auth/')
-  // const isProtectedRoute = 
-  //   req.nextUrl.pathname.startsWith('/client/') ||
-  //   req.nextUrl.pathname.startsWith('/freelancer/') ||
-  //   req.nextUrl.pathname.startsWith('/messages/')
+  const url = req.nextUrl.clone()
+  const isAuthPage = url.pathname.startsWith('/auth')
+  const isProtectedRoute = url.pathname.startsWith('/freelancer') || 
+                           url.pathname.startsWith('/client') || 
+                           url.pathname.startsWith('/api')
 
-  // if (!session && isProtectedRoute) {
-  //   const redirectUrl = req.nextUrl.clone()
-  //   redirectUrl.pathname = '/auth/login'
-  //   redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname)
-  //   return NextResponse.redirect(redirectUrl)
-  // }
+  // 2. Redirect Unauthenticated Users
+  if (!session && isProtectedRoute && !isAuthPage) {
+    url.pathname = '/auth/login'
+    url.searchParams.set('redirectedFrom', req.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
 
-  // if (session && isAuthPage) {
-  //   const redirectUrl = req.nextUrl.clone()
-  //   // Redirect to appropriate dashboard based on role
-  //   redirectUrl.pathname = '/client/dashboard'
-  //   return NextResponse.redirect(redirectUrl)
-  // }
+  // 3. Handle Authenticated Users on Auth Pages (Login/Signup)
+  if (session && isAuthPage) {
+    const role = session.user.user_metadata?.role
+    
+    // Reality Check: If role is missing, we don't force a dashboard, 
+    // we let them through or send them to a default.
+    if (role === 'freelancer') {
+      url.pathname = '/freelancer/dashboard'
+    } else {
+      url.pathname = '/client/dashboard'
+    }
+    return NextResponse.redirect(url)
+  }
 
+  // 4. Fallthrough: Let the request proceed to the intended page
   return res
 }
 
-// Specify which routes should be handled by middleware
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

@@ -1,12 +1,13 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 
 // Generate a 4-digit OTP
 function generateOTP(): string {
   return Math.floor(1000 + Math.random() * 9000).toString()
 }
 
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
   try {
     const supabase = createServerSupabaseClient()
     
@@ -123,8 +124,7 @@ export async function POST(request: Request) {
   }
 }
 
-// Verify OTP
-export async function GET(request: Request) {
+async function getHandler(request: Request) {
   try {
     const supabase = createServerSupabaseClient()
     
@@ -195,3 +195,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = postHandler
+export const GET = getHandler

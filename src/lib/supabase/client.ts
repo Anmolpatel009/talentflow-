@@ -1,22 +1,18 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // DEBUG: Log to browser console
-  console.log("[Supabase Client] URL:", supabaseUrl ? "Set" : "MISSING");
-  console.log("[Supabase Client] Key:", supabaseKey ? "Set" : "MISSING");
-
+  // DEBUG: These will show in your Browser Console (F12)
   if (!supabaseUrl || !supabaseKey) {
-    console.error("[Supabase Client] ERROR: Missing environment variables!");
-    console.error("[Supabase Client] NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl);
-    console.error("[Supabase Client] NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseKey ? "[PRESENT]" : "[MISSING]");
-    throw new Error("Supabase URL or Key is missing. Check your .env.local file.");
+    console.error("[Supabase Client] MISSING ENV VARIABLES");
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseKey);
+  // This is the CRITICAL change. 
+  // It ensures the session is saved in cookies so the Middleware can see it.
+  return createClientComponentClient();
 }
 
-// For backward compatibility
-export const supabase = createClient()
+// For backward compatibility in your components
+export const supabase = createClient();

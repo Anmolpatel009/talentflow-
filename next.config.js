@@ -10,11 +10,10 @@ const nextConfig = {
   generateEtags: true,
   // Strict mode for better development
   reactStrictMode: true,
-  // Compiler optimizations
-  compiler: {
-    // Remove console.log in production
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
+  // Compiler optimizations - only include removeConsole in production (not compatible with Turbopack)
+  compiler: process.env.NODE_ENV === 'production' ? {
+    removeConsole: true,
+  } : {},
   // Experimental features for better performance
   experimental: {
     // Optimize package imports

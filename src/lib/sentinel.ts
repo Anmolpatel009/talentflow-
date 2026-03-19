@@ -1,6 +1,6 @@
-import { initCollector } from '@sentinel/sensor';
+import { initCollector, recordMetric, recordTelemetry } from '@sentinel/sensor';
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 // Firebase configuration (from your Firebase project)
 const firebaseConfig = {
@@ -12,17 +12,38 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
+console.log('[Sentinel] Firebase config:', firebaseConfig);
 
-// Initialize Firestore
-const firestore = getFirestore(firebaseApp);
+// Initialize Firebase with error handling
+let firebaseApp;
+let firestore: Firestore | null = null;
+let sentinel;
 
-// Initialize Sentinel collector
-export const sentinel = initCollector({
-  firestore,
-  source: 'talentflow-api',
-  environment: process.env.NODE_ENV,
-});
+try {
+  // Check if Firebase is already initialized
+  if (typeof window !== 'undefined' && (window as any).firebase?.apps?.length > 0) {
+    firebaseApp = (window as any).firebase.app();
+  } else {
+    firebaseApp = initializeApp(firebaseConfig);
+  }
+  
+  console.log('[Sentinel] Firebase app initialized:', firebaseApp);
 
-export { recordMetric, recordTelemetry } from '@sentinel/sensor';
+  // Initialize Firestore
+  firestore = getFirestore(firebaseApp);
+  console.log('[Sentinel] Firestore instance:', firestore);
+
+  // Initialize Sentinel collector
+  sentinel = initCollector({
+    firestore,
+    source: 'talentflow-api',
+    environment: process.env.NODE_ENV,
+  });
+
+  console.log('[Sentinel] Sentinel collector initialized');
+} catch (error) {
+  console.error('[Sentinel] Failed to initialize Firebase/Firestore:', error);
+  sentinel = null;
+}
+
+export { sentinel, recordMetric, recordTelemetry };

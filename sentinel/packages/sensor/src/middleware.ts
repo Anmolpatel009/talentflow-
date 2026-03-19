@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { recordMetric } from './collector';
 
 /**
@@ -159,18 +160,25 @@ export function withSentinelHandler<T extends (...args: any[]) => Promise<Respon
       });
     }
     
-    // Record the metric
+    // Schedule telemetry recording WITHOUT blocking
     const duration = Date.now() - startTime;
     const normalizedPath = normalizePath(path);
     
-    recordMetric({
-      method: request.method,
-      path: normalizedPath,
-      status: response.status,
-      duration,
-      success: response.status < 400,
-      error: error?.message,
-      errorCode: error ? 'EXCEPTION' : undefined,
+    Promise.resolve().then(() => {
+      try {
+        recordMetric({
+          method: request.method,
+          path: normalizedPath,
+          status: response.status,
+          duration,
+          success: response.status < 400,
+          error: error?.message,
+          errorCode: error ? 'EXCEPTION' : undefined,
+        });
+      } catch (err) {
+        console.error('[Sentinel] Failed to record telemetry:', err);
+        // Silently handle errors to avoid affecting the main API
+      }
     });
     
     return response;

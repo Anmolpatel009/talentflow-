@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { withSentinelHandler } from '@sentinel/sensor'
 
 async function handler(request: Request) {
   try {
@@ -160,4 +159,4 @@ async function handler(request: Request) {
   }
 }
 
-export const GET = withSentinelHandler(handler)
+export const GET = handler
